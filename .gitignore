@@ -1,0 +1,11 @@
+node_modules/
+cypress/videos/
+cypress/screenshots/
+cypress/reports/
+reports/
+.env
+.env.local
+cypress.env.json
+cypress/fixtures/newUser.json
+.DS_Store
+.github

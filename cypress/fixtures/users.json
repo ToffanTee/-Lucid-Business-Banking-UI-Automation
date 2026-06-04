@@ -1,0 +1,13 @@
+{
+  "existingUser": {
+    "username": "loaded_from_env",
+    "password": "loaded_from_env",
+    "email": "loaded_from_env"
+  },
+  "invalidUser": {
+    "firstName": "T",
+    "email": "invalidemail",
+    "username": "invaliduser",
+    "password": "short"
+  }
+}

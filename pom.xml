@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ============================================================================
+  pom.xml - Maven Project Object Model
+  ============================================================================
+  This file is the heart of any Maven project. It tells Maven:
+    1. Which Java version we use
+    2. Which libraries (dependencies) we want to download from the internet
+    3. How to compile, test, package, and run our application
+
+  Think of it like a shopping list. Maven reads this file, then goes to the
+  central library warehouse (Maven Central) and downloads everything we need.
+  ============================================================================
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+      ====================================================================
+      PARENT: Spring Boot Starter Parent
+      ====================================================================
+      Spring Boot provides a "parent" POM that pre-configures sensible
+      defaults (Java version, plugin versions, dependency versions, etc.).
+      By inheriting from it, we get a working setup for free.
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+        <relativePath/>
+    </parent>
+
+    <!-- Identity of our project: groupId + artifactId + version -->
+    <groupId>com.example</groupId>
+    <artifactId>user-registration</artifactId>
+    <version>1.0.0</version>
+    <name>user-registration</name>
+    <description>Secure CRUD User Registration API with Hybrid Encryption (RSA + AES)</description>
+
+    <!--
+      Project-wide properties. We define our Java version here so we don't
+      have to repeat ourselves throughout the file.
+    -->
+    <properties>
+        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <!--
+      ====================================================================
+      DEPENDENCIES: external libraries our code needs
+      ====================================================================
+      Each <dependency> tells Maven to download a JAR file and put it on
+      our classpath. We list them in groups for readability.
+    -->
+    <dependencies>
+
+        <!-- ============================================================
+             Web Layer: Spring Web MVC + embedded Tomcat server.
+             Gives us @RestController, @GetMapping, request/response binding.
+             ============================================================ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- ============================================================
+             Data Layer: Spring Data JPA + Hibernate.
+             Lets us talk to the database using Java objects instead of SQL.
+             ============================================================ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- ============================================================
+             Input Validation: provides @NotNull, @Email, @Size etc.
+             Used to validate incoming request payloads automatically.
+             ============================================================ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- ============================================================
+             Security: BCrypt password hashing helpers.
+             We use only the password encoder pieces, not full Spring Security.
+             ============================================================ -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
+        <!-- ============================================================
+             MySQL JDBC Driver: lets Java connect to MySQL databases.
+             ============================================================ -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ============================================================
+             Lombok: code generation library. Removes boilerplate by
+             generating getters, setters, constructors via annotations.
+             ============================================================ -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- ============================================================
+             Jackson: JSON serialization/deserialization (already included
+             via spring-boot-starter-web, listed here for clarity).
+             ============================================================ -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- ============================================================
+             OpenAPI / Swagger: auto-generated API documentation UI.
+             Access at: http://localhost:8080/swagger-ui.html
+             ============================================================ -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.5.0</version>
+        </dependency>
+
+        <!-- ============================================================
+             TEST DEPENDENCIES (used only when running 'mvn test')
+             ============================================================ -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- H2 in-memory database for tests so we don't need MySQL running -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!--
+      ====================================================================
+      BUILD: how Maven should compile and package our project
+      ====================================================================
+    -->
+    <build>
+        <plugins>
+            <!-- Spring Boot plugin: lets us run "mvn spring-boot:run"
+                 and packages the app as an executable "fat" JAR -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

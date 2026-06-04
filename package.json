@@ -1,0 +1,19 @@
+{
+  "name": "lucid-business-banking-ui-automation",
+  "version": "1.0.0",
+  "description": "Cypress automation framework for Lucid Business Banking",
+  "main": "index.js",
+  "scripts": {
+    "staging-ui-test": "npx cypress run --env APP_ENV=staging",
+    "prod-ui-test": "npx cypress run --env APP_ENV=prod"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "cypress": "^13.8.1",
+    "cypress-mochawesome-reporter": "^3.8.4",
+    "dotenv": "^16.4.5"
+  },
+  "dependencies": {
+    "cypress-slow-down": "^1.4.0"
+  }
+}
