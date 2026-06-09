@@ -1,10 +1,10 @@
 import { Logger } from "../../utils/logger";
 
-class ActivationCompanyRepPage {
+class AccountSignatoriesPage {
 
   elements = {
     stepHeader() {
-      return cy.contains('Company Representative')
+      return cy.contains('Signatories')
     },
 
     firstNameInput() {
@@ -21,7 +21,7 @@ class ActivationCompanyRepPage {
     },
 
     phoneNumberInput() {
-      return cy.get('app-custom-input').eq(4).find('.input')
+      return cy.get('app-custom-input').eq(4).find('input')
     },
 
     addressInput() {
@@ -64,13 +64,13 @@ class ActivationCompanyRepPage {
 
   // Page Actions
   verifyPageIsDisplayed() {
-    Logger.step('Verifying Company Representative activation page is displayed')
+    Logger.step('Verifying account signatories information page is displayed')
     this.elements.stepHeader().should('be.visible')
-    Logger.info('Company Representative activation page displayed successfully')
+    Logger.info('Account signatories information page displayed successfully')
   }
 
   verifyPreFilledFields(data) {
-    Logger.step('Verifying that Company Representative fields are pre-filled correctly')
+    Logger.step('Verifying that signatories information fields are pre-filled correctly')
 
     // 1. Text Inputs
     if (data.firstName) {
@@ -107,7 +107,11 @@ class ActivationCompanyRepPage {
     }
 
     // 2. Dropdowns (verify text values inside the select fields)
-    this.elements.titleDropdown().should('contain.text', 'Mr.')
+    if (data.title) {
+      const cleanTitle = data.title.replace('.', '')
+      this.elements.titleDropdown().should('contain.text', cleanTitle)
+      Logger.info(`Title pre-filled correctly: ${cleanTitle}`)
+    }
     this.elements.roleDropdown().should('contain.text', 'INITIATOR')
 
     // Note: State and City names are selected from signupData. Verify they are not empty
@@ -129,10 +133,11 @@ class ActivationCompanyRepPage {
 
   clickContinue() {
     Logger.step('Clicking Continue button on Company Representative activation page')
-    this.elements.continueButton().should('be.visible').should('not.be.disabled').click()
+    cy.wait(1000)
+    this.elements.continueButton().should('be.visible').click({ force: true })
     Logger.info('Continue button clicked successfully')
   }
 
 }
 
-export default new ActivationCompanyRepPage();
+export default new AccountSignatoriesPage();

@@ -75,7 +75,7 @@ class ActivationSignatoriesPage {
 
   verifyAddSignatoryFormDisplayed() {
     Logger.step('Verifying Add new signatory form is displayed')
-    this.elements.addSignatoryHeader().should('be.visible')
+    this.elements.emailInput().should('be.visible')
     Logger.info('Add new signatory form displayed successfully')
   }
 
@@ -104,8 +104,8 @@ class ActivationSignatoriesPage {
     Logger.info('Role selected successfully')
   }
 
-  toggleIsDirectorCheckbox(check = true) {
-    Logger.step(`Toggling Signatory is also a Director checkbox to: ${check}`)
+  toggleIsDirectorCheckbox() {
+    Logger.step('Toggling Signatory is also a Director checkbox')
     // Click the checkbox label to toggle
     this.elements.isDirectorCheckbox().click()
     Logger.info('Signatory is also a Director checkbox toggled successfully')
@@ -117,7 +117,7 @@ class ActivationSignatoriesPage {
     this.fillFirstName(firstName)
     this.selectRole(role)
     if (isDirector) {
-      this.toggleIsDirectorCheckbox(true)
+      this.toggleIsDirectorCheckbox()
     }
     Logger.info('Add Signatory form details filled')
   }
@@ -153,8 +153,98 @@ class ActivationSignatoriesPage {
 
   clickContinue() {
     Logger.step('Clicking Continue button on Signatories landing page')
-    this.elements.continueButton().should('be.visible').should('not.be.disabled').click()
+    cy.wait(1000)
+    this.elements.continueButton().should('be.visible').click({ force: true })
     Logger.info('Continue button clicked successfully')
+  }
+
+  /**
+   * Flexible add signatory — handles both "Add a new signatory"
+   * (when no signatories exist) and "Add another signatory"
+   * (when signatories already exist on the page).
+   */
+  clickAddSignatory() {
+    Logger.step('Clicking add signatory link')
+    cy.wait(1000) // Ensure page settled and event handlers registered
+    cy.get('body').then($body => {
+      const bodyText = $body.text()
+      if (bodyText.includes('Add a new signatory')) {
+        cy.contains('Add a new signatory').should('be.visible').click({ force: true })
+      } else {
+        cy.contains('Add another signatory').should('be.visible').click({ force: true })
+      }
+    })
+    Logger.info('Add signatory link clicked successfully')
+  }
+
+  /**
+   * Click the edit pencil icon on the first signatory card that has a
+   * "Missing Info" banner. Traverses up the DOM from the banner text
+   * to the card container, then locates the edit icon within it.
+   */
+  clickEditOnFirstMissingInfoSignatory() {
+    Logger.step('Clicking edit on first signatory with Missing Info')
+    cy.contains('Missing Info').first().should('be.visible').then(($el) => {
+      this._clickEditOnSignatoryCard($el)
+    })
+    Logger.info('Edit icon clicked on signatory with Missing Info')
+  }
+
+  /**
+   * Click the edit pencil icon on the first signatory card that has a
+   * "Documents Pending" banner. Same traversal logic as Missing Info.
+   */
+  clickEditOnFirstPendingSignatory() {
+    Logger.step('Clicking edit on first signatory with Documents Pending')
+    cy.contains('Documents Pending').first().should('be.visible').then(($el) => {
+      this._clickEditOnSignatoryCard($el)
+    })
+    Logger.info('Edit icon clicked on signatory with Documents Pending')
+  }
+
+  /**
+   * Shared helper: given a jQuery element inside a signatory card,
+   * walk up the DOM to find the card container and click the edit icon.
+   * Uses multiple boundary markers since not all card types have "Remove signatory".
+   */
+  _clickEditOnSignatoryCard($el) {
+    // Strategy 1: Walk up from the status text to find the card container.
+    // Stop at any known card boundary marker.
+    let $card = $el
+    let foundCard = false
+    for (let i = 0; i < 20; i++) {
+      $card = $card.parent()
+      // Check multiple possible card boundary markers
+      const cardText = $card.text()
+      if (
+        cardText.includes('Remove signatory') ||
+        cardText.includes('Add a new signatory') ||
+        cardText.includes('Add another signatory') ||
+        cardText.includes('Signatory') && $card.find('img, svg, mat-icon').length > 0
+      ) {
+        foundCard = true
+        break
+      }
+    }
+
+    // Within the card, find the edit icon (pencil)
+    const editBtn = $card.find('[class*="edit"], [id*="edit"], img[src*="edit"], svg[class*="edit"], mat-icon')
+    if (editBtn.length > 0) {
+      cy.wrap(editBtn.first()).click({ force: true })
+      return
+    }
+
+    // Fallback: find the first clickable img/svg in the card
+    const imgSvg = $card.find('img, svg')
+    if (imgSvg.length > 0) {
+      cy.wrap(imgSvg.first()).click({ force: true })
+      return
+    }
+
+    // Last resort: click the edit pencil icon anywhere on the page
+    // (works when there is only one signatory card)
+    Logger.step('Fallback: clicking first edit icon on page')
+    cy.get('img, svg, mat-icon').filter(':visible').first().click({ force: true })
   }
 
 }

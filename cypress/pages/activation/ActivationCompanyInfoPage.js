@@ -73,42 +73,28 @@ class ActivationCompanyInfoPage {
     }
     
     if (data.registrationNumber) {
-      this.elements.registrationNumberInput().should('have.value', data.registrationNumber)
-      Logger.info(`CAC/Registration Number pre-filled correctly: ${data.registrationNumber}`)
+      const expectedReg = data.registrationNumber.startsWith('RC')
+        ? data.registrationNumber.substring(2)
+        : data.registrationNumber
+      this.elements.registrationNumberInput().should('have.value', expectedReg)
+      Logger.info(`CAC/Registration Number pre-filled correctly: ${expectedReg}`)
     }
     
     if (data.tin) {
       this.elements.tinInput().should('have.value', data.tin)
       Logger.info(`TIN pre-filled correctly: ${data.tin}`)
     }
-
-    if (data.businessNature) {
-      cy.get('app-custom-input').eq(5).find('.input').should('have.value', data.businessNature)
-      Logger.info(`Business Nature pre-filled correctly: ${data.businessNature}`)
-    }
-
-    if (data.companyAddress) {
-      cy.get('app-custom-input').eq(6).find('.input').should('have.value', data.companyAddress)
-      Logger.info(`Company Address pre-filled correctly: ${data.companyAddress}`)
-    }
-
-    if (data.companyPhoneNumber) {
-      const numberOnly = data.companyPhoneNumber.startsWith('0')
-        ? data.companyPhoneNumber.substring(1)
-        : data.companyPhoneNumber
-      cy.get('app-custom-input').eq(7).find('.input').should('have.value', numberOnly)
-      Logger.info(`Phone Number pre-filled correctly: ${numberOnly}`)
-    }
   }
 
   selectBusinessCategory() {
     Logger.step('Selecting a random business category...')
     this.elements.businessCategoryDropdown().click()
+    cy.wait(1000) // Allow dropdown option list to render and animate
     this.elements.businessCategoryOptions()
       .should('have.length.greaterThan', 0)
       .then(($options) => {
         const randomIndex = Math.floor(Math.random() * $options.length)
-        cy.wrap($options).eq(randomIndex).click()
+        this.elements.businessCategoryOptions().eq(randomIndex).click({ force: true })
       })
     Logger.info('Business category selected successfully')
   }

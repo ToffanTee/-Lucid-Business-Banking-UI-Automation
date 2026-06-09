@@ -54,11 +54,12 @@ class SignatoryBioPage2 {
    */
   selectState() {
     Logger.step('Selecting a state from dropdown...')
-    this.elements.stateDropdown().click()
-    cy.get('.mdc-list-item__primary-text').should('be.visible')
-    cy.get('.mdc-list-item__primary-text').then(($options) => {
+    cy.wait(1000)
+    this.elements.stateDropdown().should('be.visible').click({ force: true })
+    cy.get('.mdc-list-item__primary-text, mat-option').should('be.visible')
+    cy.get('.mdc-list-item__primary-text, mat-option').then(($options) => {
       const randomIndex = Math.floor(Math.random() * $options.length)
-      cy.wrap($options.eq(randomIndex)).click()
+      cy.wrap($options.eq(randomIndex)).click({ force: true })
     })
     Logger.info('State selected successfully')
   }
@@ -69,11 +70,12 @@ class SignatoryBioPage2 {
    */
   selectCity() {
     Logger.step('Selecting a city from dropdown...')
-    this.elements.cityDropdown().click()
-    cy.get('.mdc-list-item__primary-text').should('be.visible')
-    cy.get('.mdc-list-item__primary-text').then(($options) => {
+    cy.wait(1000)
+    this.elements.cityDropdown().should('be.visible').click({ force: true })
+    cy.get('.mdc-list-item__primary-text, mat-option').should('be.visible')
+    cy.get('.mdc-list-item__primary-text, mat-option').then(($options) => {
       const randomIndex = Math.floor(Math.random() * $options.length)
-      cy.wrap($options.eq(randomIndex)).click()
+      cy.wrap($options.eq(randomIndex)).click({ force: true })
     })
     Logger.info('City selected successfully')
   }
@@ -83,11 +85,12 @@ class SignatoryBioPage2 {
    */
   selectStateOfOrigin() {
     Logger.step('Selecting state of origin from dropdown...')
-    this.elements.stateOfOriginDropdown().click()
-    cy.get('.mdc-list-item__primary-text').should('be.visible')
-    cy.get('.mdc-list-item__primary-text').then(($options) => {
+    cy.wait(1000)
+    this.elements.stateOfOriginDropdown().should('be.visible').click({ force: true })
+    cy.get('.mdc-list-item__primary-text, mat-option').should('be.visible')
+    cy.get('.mdc-list-item__primary-text, mat-option').then(($options) => {
       const randomIndex = Math.floor(Math.random() * $options.length)
-      cy.wrap($options.eq(randomIndex)).click()
+      cy.wrap($options.eq(randomIndex)).click({ force: true })
     })
     Logger.info('State of origin selected successfully')
   }

@@ -1,10 +1,10 @@
 import { Logger } from "../../utils/logger";
 
-class ActivationEditSignatoryPage {
+class ActivationEditDirectorPage {
 
   elements = {
     stepHeader() {
-      return cy.contains('Edit signatory')
+      return cy.contains(/Edit director|Add new director/i)
     },
 
     titleDropdown() {
@@ -56,27 +56,10 @@ class ActivationEditSignatoryPage {
     }
   }
 
-  // Page Actions
   verifyPageIsDisplayed() {
-    Logger.step('Verifying Edit Signatory page is displayed')
+    Logger.step('Verifying Edit Director page is displayed')
     this.elements.stepHeader().should('be.visible')
-    Logger.info('Edit Signatory page displayed successfully')
-  }
-
-  verifyPreFilledFields(expectedEmail, expectedFirstName, expectedRole) {
-    Logger.step('Verifying prefilled fields on Edit Signatory page')
-    if (expectedFirstName) {
-      this.elements.firstNameInput().should('have.value', expectedFirstName)
-      Logger.info(`First name verified: ${expectedFirstName}`)
-    }
-    if (expectedEmail) {
-      this.elements.emailInput().should('have.value', expectedEmail)
-      Logger.info(`Email verified: ${expectedEmail}`)
-    }
-    if (expectedRole) {
-      this.elements.roleDropdown().should('contain.text', expectedRole)
-      Logger.info(`Role verified: ${expectedRole}`)
-    }
+    Logger.info('Edit Director page displayed successfully')
   }
 
   selectTitle(title) {
@@ -155,25 +138,25 @@ class ActivationEditSignatoryPage {
   }
 
   clickContinue() {
-    Logger.step('Clicking Continue button on Edit Signatory page')
+    Logger.step('Clicking Continue button on Edit Director page')
     this.elements.continueButton().should('be.visible').should('not.be.disabled').click()
     Logger.info('Continue button clicked successfully')
   }
 
   completeEditForm(data) {
-    Logger.step('Completing Edit Signatory form')
+    Logger.step('Completing Edit Director form')
     this.selectTitle(data.title || 'Mr.')
-    this.fillLastName(data.lastName || 'SignatoryLastName')
+    this.fillLastName(data.lastName || 'DirectorLastName')
     this.fillPhoneNumber(data.phoneNumber || '8012345678')
-    this.selectState(data.state) // will fall back to first option if not provided
-    this.selectCity(data.city)   // will fall back to first option if not provided
+    this.selectState(data.state)
+    this.selectCity(data.city)
     this.fillAddress(data.address || '123 Test Street')
-    this.fillOccupation(data.occupation || 'Business Analyst')
+    this.fillOccupation(data.occupation || 'Director')
     this.fillMothersMaidenName(data.mothersMaidenName || 'Maiden')
     this.clickContinue()
-    Logger.info('Edit Signatory form completed and submitted')
+    Logger.info('Edit Director form completed and submitted')
   }
 
 }
 
-export default new ActivationEditSignatoryPage();
+export default new ActivationEditDirectorPage();

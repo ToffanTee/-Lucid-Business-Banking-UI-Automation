@@ -57,15 +57,20 @@ module.exports = defineConfig({
       on('task', {
         saveNewUserCredentials(data) {
           const filePath = path.resolve('cypress/fixtures/newUser.json');
-          const dataToSave = {
-            ...data,
-            createdAt: new Date().toISOString()
-          };
+          let dataToSave;
+          if (!data || Object.keys(data).length === 0) {
+            dataToSave = {};
+          } else {
+            dataToSave = {
+              ...data,
+              createdAt: new Date().toISOString()
+            };
+          }
           fs.writeFileSync(filePath, JSON.stringify(dataToSave, null, 2));
           console.log(`New user credentials saved to ${filePath}`);
 
-          const username = data.username;
-          const password = data.password;
+          const username = data?.username || '';
+          const password = data?.password || '';
 
           // Also update .env file with NEW_USER_USERNAME and NEW_USER_PASSWORD
           const envPath = path.resolve('.env');
@@ -208,6 +213,10 @@ module.exports = defineConfig({
         // New user credentials from .env (populated after registration)
         NEW_USER_USERNAME: process.env.NEW_USER_USERNAME || '',
         NEW_USER_PASSWORD: process.env.NEW_USER_PASSWORD || '',
+        // Activation NIN and signatory static data from .env
+        NIN_FOR_ACTIVATION: process.env.NIN_FOR_ACTIVATION || '',
+        SIGNATORY_FIRST_NAME: process.env.SIGNATORY_FIRST_NAME || 'Bunch',
+        SIGNATORY_LAST_NAME: process.env.SIGNATORY_LAST_NAME || 'Dilion',
       };
 
       console.log(`Running Cypress tests in "${envName}" environment`);

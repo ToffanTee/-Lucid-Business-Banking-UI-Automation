@@ -9,14 +9,14 @@ class CreateProfilePage {
 
 
     usernameInput() {
-      return cy.get('app-custom-input > .input')
+      return cy.get('app-custom-input').eq(0).find('.input')
     },
     passwordInput() {
-      return cy.get(':nth-child(2) > app-custom-input > .relative > .input')
+      return cy.get('app-custom-input').eq(1).find('.input')
     },
 
     confirmPasswordInput() {
-      return cy.get('div.mb-6 > app-custom-input > .relative > .input')
+      return cy.get('app-custom-input').eq(2).find('.input')
     },
 
     // TODO: Update selector — Create Account / Submit button
@@ -39,7 +39,7 @@ class CreateProfilePage {
   fillUsername(username) {
     Logger.step('Entering username...')
     if (username) {
-      this.elements.usernameInput().clear().type(username)
+      this.elements.usernameInput().clear().type(username, { delay: 50 })
       Logger.info('Username entered successfully')
     } else {
       Logger.error('Username is empty — cannot enter')
@@ -49,7 +49,7 @@ class CreateProfilePage {
   fillPassword(password) {
     Logger.step('Entering password...')
     if (password) {
-      this.elements.passwordInput().clear().type(password)
+      this.elements.passwordInput().clear().type(password, { delay: 50 })
       Logger.info('Password entered successfully')
     } else {
       Logger.error('Password is empty — cannot enter')
@@ -63,7 +63,7 @@ class CreateProfilePage {
       throw new Error('Password and Confirm Password do not match')
     }
     if (confirmPassword) {
-      this.elements.confirmPasswordInput().clear().type(confirmPassword)
+      this.elements.confirmPasswordInput().clear().type(confirmPassword, { delay: 50 })
       Logger.info('Confirm password entered successfully')
     } else {
       Logger.error('Confirm password is empty — cannot enter')

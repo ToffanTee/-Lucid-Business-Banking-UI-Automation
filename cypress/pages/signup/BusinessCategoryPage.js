@@ -38,7 +38,7 @@ class BusinessCategoryPage {
       .should('have.length.greaterThan', 0)
       .then(($options) => {
         const randomIndex = Math.floor(Math.random() * $options.length)
-        cy.wrap($options).eq(randomIndex).click()
+        this.elements.businessCategoryOptions().eq(randomIndex).click()
       })
     Logger.info('Business category selected successfully')
   }

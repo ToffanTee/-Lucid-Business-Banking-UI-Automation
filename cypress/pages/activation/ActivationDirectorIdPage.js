@@ -1,10 +1,10 @@
 import { Logger } from "../../utils/logger";
 
-class ActivationSignatoryIdPage {
+class ActivationDirectorIdPage {
 
   elements = {
     stepHeader() {
-      return cy.contains('Signatory Identification')
+      return cy.contains('Director Identification')
     },
 
     addMoreLink() {
@@ -17,13 +17,12 @@ class ActivationSignatoryIdPage {
   }
 
   verifyPageIsDisplayed() {
-    Logger.step('Verifying Signatory Identification page is displayed')
+    Logger.step('Verifying Director Identification page is displayed')
     this.elements.stepHeader().should('be.visible')
-    Logger.info('Signatory Identification page displayed successfully')
+    Logger.info('Director Identification page displayed successfully')
   }
 
   getSection(sectionIndex) {
-    // Find the sectionIndex-th file input, and walk up to the section container wrapping all elements (including radio buttons)
     return cy.get('input[type="file"]').eq(sectionIndex).then(($fileInput) => {
       let container = $fileInput.parent();
       while (container.length && container.find('mat-radio-button, .mat-mdc-radio-button').length === 0) {
@@ -97,13 +96,12 @@ class ActivationSignatoryIdPage {
 
   uploadDocument(sectionIndex) {
     Logger.step(`Uploading document for section ${sectionIndex}`)
-    // Generate a ~1MB buffer to meet the minimum file size requirement
     const fileSize = 1 * 1024 * 1024; // 1 MB
     const buffer = Cypress.Buffer.alloc(fileSize, 'a');
     this.getSection(sectionIndex).then(($section) => {
       cy.wrap($section).find('input[type="file"]').selectFile({
         contents: buffer,
-        fileName: 'signatory_id.pdf',
+        fileName: 'director_id.pdf',
         mimeType: 'application/pdf',
       }, { force: true })
     })
@@ -117,10 +115,10 @@ class ActivationSignatoryIdPage {
   }
 
   clickContinue() {
-    Logger.step('Clicking Continue button on Signatory Identification page')
+    Logger.step('Clicking Continue button on Director Identification page')
     this.elements.continueButton().should('be.visible').should('not.be.disabled').click()
     Logger.info('Continue button clicked successfully')
   }
 }
 
-export default new ActivationSignatoryIdPage();
+export default new ActivationDirectorIdPage();

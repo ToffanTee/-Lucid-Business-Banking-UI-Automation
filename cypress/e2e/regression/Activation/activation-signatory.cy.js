@@ -1,16 +1,17 @@
 import { generateRegistrationData } from '../../../utils/dataBuilder';
 import RegistrationTypePage from '../../../pages/signup/RegistrationTypePage';
 import BusinessCategoryPage from '../../../pages/signup/BusinessCategoryPage';
-import CompanyInfoPage from '../../../pages/signup/CompanyInfoPage';
-import CompanyRepBioPage1 from '../../../pages/signup/CompanyRepBioPage1';
-import CompanyRepBioPage2 from '../../../pages/signup/CompanyRepBioPage2';
+import BvnPage from '../../../pages/signup/BvnPage';
+import BvnVerificationPage from '../../../pages/signup/BvnVerificationPage';
+import SignatoryBioPage1 from '../../../pages/signup/SignatoryBioPage1';
+import SignatoryBioPage2 from '../../../pages/signup/SignatoryBioPage2';
+import KycPage from '../../../pages/signup/KycPage';
 import PasscodeVerificationPage from '../../../pages/signup/PasscodeVerificationPage';
 import CreateProfilePage from '../../../pages/signup/CreateProfilePage';
 import LoginPage from '../../../pages/login/LoginPage';
 import DeviceRegistrationPage from '../../../pages/login/DeviceRegistrationPage';
 import ImportantNoticePage from '../../../pages/activation/ImportantNoticePage';
 import ActivationCompanyInfoPage from '../../../pages/activation/ActivationCompanyInfoPage';
-import ActivationCompanyRepPage from '../../../pages/activation/AccountSignatoriesPage';
 import ActivationSignatoriesPage from '../../../pages/activation/ActivationSignatoriesPage';
 import ActivationEditSignatoryPage from '../../../pages/activation/ActivationEditSignatoryPage';
 import ActivationSignatoryIdPage from '../../../pages/activation/ActivationSignatoryIdPage';
@@ -22,7 +23,7 @@ import ActivationUploadDocumentsPage from '../../../pages/activation/ActivationU
 import ActivationSummaryPage from '../../../pages/activation/ActivationSummaryPage';
 import ActivationAgreementPage from '../../../pages/activation/ActivationAgreementPage';
 
-describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () => {
+describe('Lucid Business Banking - Account Activation Flow (Signatory/Director)', () => {
 
   let registrationData;
 
@@ -31,8 +32,8 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
     registrationData = generateRegistrationData();
   });
 
-  it('Should complete signup (if needed), login, and verify first steps of account activation', () => {
-    
+  it('Should complete signup (if needed), login, and verify activation as Signatory/Director', () => {
+
     // Check if new user info is already saved from a previous run and matches what is in .env
     cy.task('readNewUserEnvCredentials').then((envUser) => {
       cy.task('readNewUserCredentials').then((existingNewUser) => {
@@ -54,16 +55,33 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
     });
 
     function runFullSignupFlow() {
-      // Phase 1: Complete User Signup
+      // Phase 1: Complete User Signup (Signatory/Director path)
       RegistrationTypePage.navigateToSignUp();
       RegistrationTypePage.verifyPageIsDisplayed();
-      RegistrationTypePage.selectCompanyRep();
+      RegistrationTypePage.selectSignatoryDirector();
 
+      // Step: Business Category
       BusinessCategoryPage.completeBusinessCategoryStep();
-      CompanyInfoPage.completeCompanyInfoStep(registrationData);
-      CompanyRepBioPage1.completeCompanyRepBio1(registrationData);
-      CompanyRepBioPage2.completeCompanyRepBio2(registrationData);
+
+      // Step: BVN Entry
+      BvnPage.completeBvnStep(registrationData.bvn);
+
+      // Step: BVN Verification (OTP)
+      BvnVerificationPage.completeBvnVerification();
+
+      // Step: Signatory Bio (1/2) — personal details
+      SignatoryBioPage1.completeInfoVerification(registrationData);
+
+      // Step: Signatory Bio (2/2) — address, state, city, state of origin, mother's maiden name
+      SignatoryBioPage2.completeSignatoryBio2(registrationData);
+
+      // Step: KYC / Organization Profile
+      KycPage.completeKycStep(registrationData);
+
+      // Step: Passcode Verification
       PasscodeVerificationPage.completePasscodeVerification();
+
+      // Step: Create Profile
       CreateProfilePage.completeProfileCreation(registrationData);
       CreateProfilePage.verifyAccountCreated();
 
@@ -83,7 +101,6 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
       // ==========================================
       // Phase 3: Register Device (First login requirement)
       // ==========================================
-      // Use handleDeviceRegistrationIfNeeded so that if it is already registered (on a rerun), it skips gracefully
       DeviceRegistrationPage.handleDeviceRegistrationIfNeeded();
 
       // Wait for the URL to change away from the device registration page if it was loaded
@@ -100,7 +117,7 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
       // ==========================================
       // Phase 4: Account Activation Flow
       // ==========================================
-      
+
       // Step 4.1: Important Notice Page
       ImportantNoticePage.verifyPageIsDisplayed();
       ImportantNoticePage.clickContinue();
@@ -111,17 +128,10 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
       ActivationCompanyInfoPage.selectBusinessCategory();
       ActivationCompanyInfoPage.clickContinue();
 
-      // Step 4.3: Company Representative Step
-      ActivationCompanyRepPage.verifyPageIsDisplayed();
-      ActivationCompanyRepPage.verifyPreFilledFields(registrationData);
-      ActivationCompanyRepPage.fillOccupation(registrationData.occupation || 'Software Engineer');
-      // Use NIN from .env
-      const activationNin = Cypress.env('NIN_FOR_ACTIVATION') || '63184876213';
-      ActivationCompanyRepPage.fillNin(activationNin);
-      ActivationCompanyRepPage.clickContinue();
-
       // ==========================================
-      // Step 4.4: Signatories Step (Smart Handling)
+      // Step 4.3: Signatories Step (Smart Handling)
+      // NOTE: In the Signatory/Director flow, there is NO "Company Representative"
+      // form step. After Company Info, it goes straight to the Signatories listing.
       // ==========================================
       ActivationSignatoriesPage.verifyPageIsDisplayed();
       cy.wait(3000); // Allow dynamic content to fully render
