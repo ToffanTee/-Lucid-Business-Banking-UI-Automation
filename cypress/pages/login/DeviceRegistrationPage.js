@@ -143,6 +143,25 @@ class DeviceRegistrationPage {
       if (url.includes('/auth/device')) {
         Logger.step('Device registration required — starting flow')
         this.completeDeviceRegistration(deviceAction)
+
+        // Wait for the URL to change away from device registration
+        cy.url().should('not.include', '/auth/device')
+
+        // If we got redirected back to login page (post device registration), log in again
+        cy.url().then((newUrl) => {
+          if (newUrl.includes('/login')) {
+            Logger.step('Redirected to login after device registration. Logging in again...')
+            cy.task('readEnvCredentials').then(({ username, password }) => {
+              if (username && password) {
+                cy.get('app-custom-input').eq(0).find('.input').clear().type(username)
+                cy.get('app-custom-input').eq(1).find('.input').clear().type(password)
+                cy.contains('button', 'Login').click()
+              } else {
+                Logger.error('Auto-login failed: username or password not found in env')
+              }
+            })
+          }
+        })
       } else {
         Logger.info('Device already registered — skipping to dashboard')
       }

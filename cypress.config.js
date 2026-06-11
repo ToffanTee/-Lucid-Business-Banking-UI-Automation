@@ -154,16 +154,18 @@ module.exports = defineConfig({
           const envPath = path.resolve('.env');
           if (!fs.existsSync(envPath)) {
             console.error('.env file not found');
-            return { username: '', password: '' };
+            return { username: '', password: '', transactionPin: '' };
           }
 
           const content = fs.readFileSync(envPath, 'utf-8');
           const usernameMatch = content.match(/^EXISTING_USER_USERNAME=(.*)$/m);
           const passwordMatch = content.match(/^EXISTING_USER_PASSWORD=(.*)$/m);
+          const pinMatch = content.match(/^TRANSACTION_PIN=(.*)$/m);
 
           return {
             username: usernameMatch ? usernameMatch[1].trim() : '',
-            password: passwordMatch ? passwordMatch[1].trim() : ''
+            password: passwordMatch ? passwordMatch[1].trim() : '',
+            transactionPin: pinMatch ? pinMatch[1].trim() : ''
           };
         },
 
