@@ -72,7 +72,7 @@ class InterBankTransferPage {
     },
 
     continueButton() {
-      return cy.contains('button', 'Continue').filter(':visible')
+      return cy.get('[class*="ng-tns-c3740896876-"] > .bg-primary').filter(':visible')
     },
 
     confirmTransferButton() {
