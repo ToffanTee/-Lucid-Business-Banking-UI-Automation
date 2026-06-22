@@ -20,16 +20,19 @@ class ActivationUploadDocumentsPage {
 
   selectUniqueDocumentType(index, selectedTypes) {
     Logger.step(`Selecting unique document type for dropdown index ${index}`)
-    cy.get('mat-select').eq(index).click({ force: true })
+    // Scroll the trigger into view first so the CDK overlay panel renders
+    // within the visible viewport and is not clipped by fixed-position ancestors
+    cy.get('mat-select').eq(index).scrollIntoView().click({ force: true })
     cy.wait(1000) // Wait for dropdown options to render
-    
-    cy.get('.mdc-list-item__primary-text, mat-option').should('be.visible').then(($options) => {
+
+    // mat-option elements live inside a position:fixed CDK overlay — they exist
+    // in the DOM but Cypress flags them as not visible. Use 'exist' + scrollIntoView.
+    cy.get('.mdc-list-item__primary-text, mat-option').should('exist').then(($options) => {
       let optionToClick = null;
       let selectedText = '';
 
       for (let j = 0; j < $options.length; j++) {
         const text = $options.eq(j).text().trim();
-        // Skip empty text or placeholder-like text if any
         if (text && text !== 'Select document' && !selectedTypes.includes(text)) {
           optionToClick = $options.eq(j);
           selectedText = text;
@@ -45,7 +48,7 @@ class ActivationUploadDocumentsPage {
 
       selectedTypes.push(selectedText);
       Logger.info(`Selecting document type: "${selectedText}"`)
-      cy.wrap(optionToClick).click({ force: true })
+      cy.wrap(optionToClick).scrollIntoView().click({ force: true })
     })
   }
 

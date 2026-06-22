@@ -57,6 +57,7 @@ class ActivationDirectorsPage {
   // Page Actions
   verifyPageIsDisplayed() {
     Logger.step('Verifying Directors page is displayed')
+    cy.url().should('include', 'directors')
     this.elements.stepHeader().should('be.visible')
     Logger.info('Directors page displayed successfully')
   }
@@ -143,7 +144,7 @@ class ActivationDirectorsPage {
   clickContinue() {
     Logger.step('Clicking Continue button on Directors landing page')
     cy.wait(1000)
-    this.elements.continueButton().should('be.visible').click({ force: true })
+    this.elements.continueButton().scrollIntoView().should('be.visible').click()
     Logger.info('Continue button clicked successfully')
   }
 
@@ -169,11 +170,12 @@ class ActivationDirectorsPage {
   }
 
   clickEditOnFirstMissingInfoDirector() {
-    Logger.step('Clicking edit on first director with Phone number: N/A')
-    cy.contains('Phone number: N/A').first().should('be.visible').then(($el) => {
-      this._clickEditOnDirectorCard($el)
-    })
-    Logger.info('Edit icon clicked on director with Missing Info')
+    Logger.step('Clicking Edit Director Information on first director with Missing Info')
+    cy.get('[mattooltip="Edit Director Information"], [aria-label="Edit Director Information"]')
+      .first()
+      .should('be.visible')
+      .click()
+    Logger.info('Edit Director Information icon clicked successfully')
   }
 
   getUnverifiedDirectorEmails() {
@@ -210,11 +212,12 @@ class ActivationDirectorsPage {
   }
 
   clickEditOnFirstPendingDirector() {
-    Logger.step('Clicking edit on first director with Documents Pending')
-    cy.contains('Documents Pending').first().should('be.visible').then(($el) => {
-      this._clickEditOnDirectorCard($el)
-    })
-    Logger.info('Edit icon clicked on director with Documents Pending')
+    Logger.step('Clicking Edit Director Information on first director with Documents Pending')
+    cy.get('[mattooltip="Edit Director Information"], [aria-label="Edit Director Information"]')
+      .first()
+      .should('be.visible')
+      .click()
+    Logger.info('Edit Director Information icon clicked successfully')
   }
 
   _clickEditOnDirectorCard($el) {

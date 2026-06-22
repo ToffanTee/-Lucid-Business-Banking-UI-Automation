@@ -34,12 +34,12 @@ class BusinessCategoryPage {
   selectBusinessCategory() {
     Logger.step('Selecting a random business category...')
     this.elements.businessCategoryDropdown().click()
-    this.elements.businessCategoryOptions()
-      .should('have.length.greaterThan', 0)
-      .then(($options) => {
-        const randomIndex = Math.floor(Math.random() * $options.length)
-        this.elements.businessCategoryOptions().eq(randomIndex).click()
-      })
+    // cy.contains('mat-option', text) filters out CDK overlay elements it deems "not visible"
+    // (position:fixed ancestor). Use the already-found element + force:true instead.
+    cy.get('mat-option', { timeout: 10000 }).should('exist').then(($options) => {
+      const randomIndex = Math.floor(Math.random() * $options.length)
+      cy.wrap($options.eq(randomIndex)).click({ force: true })
+    })
     Logger.info('Business category selected successfully')
   }
 

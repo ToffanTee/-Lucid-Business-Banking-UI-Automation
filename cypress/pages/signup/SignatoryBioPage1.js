@@ -13,10 +13,8 @@ class InfoVerificationPage {
       return cy.get('.h-full')
     },
 
-    // Title dropdown (requires input)
-    // TODO: Update selector
     titleDropdown() {
-      return cy.get('#mat-select-value-3')
+      return cy.get('mat-select').eq(0)
     },
 
     // Prefilled fields — verify they have values

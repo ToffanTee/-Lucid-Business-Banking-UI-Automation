@@ -171,6 +171,7 @@ class ActivationEditSignatoryPage {
     this.fillOccupation(data.occupation || 'Business Analyst')
     this.fillMothersMaidenName(data.mothersMaidenName || 'Maiden')
     this.clickContinue()
+    cy.wait(10000)
     Logger.info('Edit Signatory form completed and submitted')
   }
 

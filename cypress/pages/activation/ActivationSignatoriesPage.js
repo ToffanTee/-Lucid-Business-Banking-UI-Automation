@@ -61,6 +61,7 @@ class ActivationSignatoriesPage {
   // Page Actions
   verifyPageIsDisplayed() {
     Logger.step('Verifying Signatories page is displayed')
+    cy.url().should('include', 'signatories')
     this.elements.stepHeader().should('be.visible')
     Logger.info('Signatories page displayed successfully')
   }
@@ -79,6 +80,7 @@ class ActivationSignatoriesPage {
 
   verifyAddSignatoryFormDisplayed() {
     Logger.step('Verifying Add new signatory form is displayed')
+    this.elements.addSignatoryHeader().should('be.visible')
     this.elements.emailInput().should('be.visible')
     Logger.info('Add new signatory form displayed successfully')
   }
@@ -180,37 +182,69 @@ class ActivationSignatoriesPage {
     cy.get('body').then($body => {
       const bodyText = $body.text()
       if (bodyText.includes('Add a new signatory')) {
-        cy.contains('Add a new signatory').should('be.visible').click({ force: true })
+        cy.contains('Add a new signatory').should('be.visible').click()
       } else {
-        cy.contains('Add another signatory').should('be.visible').click({ force: true })
+        cy.contains('Add another signatory').should('be.visible').click()
       }
     })
     Logger.info('Add signatory link clicked successfully')
   }
 
   /**
-   * Click the edit pencil icon on the first signatory card that has a
-   * "Missing Info" banner. Traverses up the DOM from the banner text
-   * to the card container, then locates the edit icon within it.
+   * Click the "Edit Signatory Information" pencil icon on the first signatory
+   * card that has a "Missing Info" banner.
    */
   clickEditOnFirstMissingInfoSignatory() {
-    Logger.step('Clicking edit on first signatory with Phone number: N/A')
-    cy.contains('Phone number: N/A').first().should('be.visible').then(($el) => {
-      this._clickEditOnSignatoryCard($el)
-    })
-    Logger.info('Edit icon clicked on signatory with Missing Info')
+    Logger.step('Clicking Edit Signatory Information on first signatory with Missing Info')
+    cy.get('[mattooltip="Edit Signatory Information"], [aria-label="Edit Signatory Information"]')
+      .first()
+      .should('be.visible')
+      .click()
+    Logger.info('Edit Signatory Information icon clicked successfully')
   }
 
   /**
-   * Click the edit pencil icon on the first signatory card that has a
-   * "Documents Pending" banner. Same traversal logic as Missing Info.
+   * Extracts yopmail addresses from all signatory cards that have a
+   * Missing Info or Documents Pending banner — mirrors getUnverifiedDirectorEmails.
+   */
+  getUnverifiedSignatoryEmails() {
+    Logger.step('Extracting emails for all unverified signatories')
+    return cy.get('body').then($body => {
+      const emails = []
+      const unverifiedCards = $body.find('div:contains("Missing Info"), div:contains("Documents Pending")').filter(function() {
+        return Cypress.$(this).text().includes('@yopmail.com')
+      })
+
+      unverifiedCards.each((_, card) => {
+        const text = Cypress.$(card)[0].innerText || Cypress.$(card).text()
+        const match = text.match(/([a-zA-Z0-9._-]+@yopmail\.com)/)
+        if (match && !emails.includes(match[1])) {
+          emails.push(match[1])
+        }
+      })
+
+      if (emails.length === 0) {
+        const text = $body[0].innerText || $body.text()
+        const matches = text.match(/[a-zA-Z0-9._-]+@yopmail\.com/g) || []
+        matches.forEach(m => { if (!emails.includes(m)) emails.push(m) })
+      }
+
+      Logger.info(`Found unverified signatory emails: ${emails.join(', ')}`)
+      return cy.wrap(emails)
+    })
+  }
+
+  /**
+   * Click the "Edit Signatory Information" pencil icon on the first signatory
+   * card that has a "Documents Pending" banner.
    */
   clickEditOnFirstPendingSignatory() {
-    Logger.step('Clicking edit on first signatory with Documents Pending')
-    cy.contains('Documents Pending').first().should('be.visible').then(($el) => {
-      this._clickEditOnSignatoryCard($el)
-    })
-    Logger.info('Edit icon clicked on signatory with Documents Pending')
+    Logger.step('Clicking Edit Signatory Information on first signatory with Documents Pending')
+    cy.get('[mattooltip="Edit Signatory Information"], [aria-label="Edit Signatory Information"]')
+      .first()
+      .should('be.visible')
+      .click()
+    Logger.info('Edit Signatory Information icon clicked successfully')
   }
 
   /**

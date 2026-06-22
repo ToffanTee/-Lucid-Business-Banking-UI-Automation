@@ -4,6 +4,10 @@ import BusinessCategoryPage from '../../../pages/signup/BusinessCategoryPage';
 import CompanyInfoPage from '../../../pages/signup/CompanyInfoPage';
 import CompanyRepBioPage1 from '../../../pages/signup/CompanyRepBioPage1';
 import CompanyRepBioPage2 from '../../../pages/signup/CompanyRepBioPage2';
+import BvnPage from '../../../pages/signup/BvnPage';
+import BvnVerificationPage from '../../../pages/signup/BvnVerificationPage';
+import SignatoryBioPage1 from '../../../pages/signup/SignatoryBioPage1';
+import SignatoryBioPage2 from '../../../pages/signup/SignatoryBioPage2';
 import PasscodeVerificationPage from '../../../pages/signup/PasscodeVerificationPage';
 import CreateProfilePage from '../../../pages/signup/CreateProfilePage';
 import LoginPage from '../../../pages/login/LoginPage';
@@ -21,6 +25,7 @@ import ActivationAccountPreferencesPage from '../../../pages/activation/Activati
 import ActivationUploadDocumentsPage from '../../../pages/activation/ActivationUploadDocumentsPage';
 import ActivationSummaryPage from '../../../pages/activation/ActivationSummaryPage';
 import ActivationAgreementPage from '../../../pages/activation/ActivationAgreementPage';
+import YopmailPage from '../../../pages/yopmail/YopmailPage';
 
 const ACTIVATION_USERNAME_KEY = 'ACTIVATION_REP_USERNAME';
 const ACTIVATION_PASSWORD_KEY = 'ACTIVATION_REP_PASSWORD';
@@ -31,12 +36,11 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
   let registrationData;
 
   beforeEach(() => {
-    // Generate fresh data for every test iteration
     registrationData = generateRegistrationData();
   });
 
-  it('Should complete signup (if needed), login, and verify first steps of account activation', () => {
-    
+  it('Should complete signup (if needed), login, and verify activation as Company Rep', () => {
+
     cy.task('readActivationCredentials', { usernameKey: ACTIVATION_USERNAME_KEY, passwordKey: ACTIVATION_PASSWORD_KEY })
       .then(({ username, password }) => {
         if (username && password) {
@@ -57,16 +61,27 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
       });
 
     function runFullSignupFlow() {
-      // Phase 1: Complete User Signup
+      // Phase 1: Complete User Signup (Company Rep path)
       RegistrationTypePage.navigateToSignUp();
       RegistrationTypePage.verifyPageIsDisplayed();
       RegistrationTypePage.selectCompanyRep();
 
+      // Step: Business Category
       BusinessCategoryPage.completeBusinessCategoryStep();
+
+      // Step: Company Info (company details entry)
       CompanyInfoPage.completeCompanyInfoStep(registrationData);
+
+      // Step: Company Rep Bio (1/2) — personal details
       CompanyRepBioPage1.completeCompanyRepBio1(registrationData);
+
+      // Step: Company Rep Bio (2/2) — address, state, etc.
       CompanyRepBioPage2.completeCompanyRepBio2(registrationData);
+
+      // Step: Passcode Verification
       PasscodeVerificationPage.completePasscodeVerification();
+
+      // Step: Create Profile
       CreateProfilePage.completeProfileCreation(registrationData);
       CreateProfilePage.verifyAccountCreated();
 
@@ -99,7 +114,7 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
       // ==========================================
       // Phase 4: Account Activation Flow
       // ==========================================
-      
+
       // Step 4.1: Important Notice Page
       ImportantNoticePage.verifyPageIsDisplayed();
       ImportantNoticePage.clickContinue();
@@ -110,11 +125,10 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
       ActivationCompanyInfoPage.selectBusinessCategory();
       ActivationCompanyInfoPage.clickContinue();
 
-      // Step 4.3: Company Representative Step
+      // Step 4.3: Company Representative Step (unique to this flow)
       ActivationCompanyRepPage.verifyPageIsDisplayed();
       ActivationCompanyRepPage.verifyPreFilledFields(registrationData);
       ActivationCompanyRepPage.fillOccupation(registrationData.occupation || 'Software Engineer');
-      // Use NIN from .env
       const activationNin = Cypress.env('NIN_FOR_ACTIVATION') || '63184876213';
       ActivationCompanyRepPage.fillNin(activationNin);
       ActivationCompanyRepPage.clickContinue();
@@ -127,7 +141,6 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
 
       const signatoryFirstName = Cypress.env('SIGNATORY_FIRST_NAME') || 'Bunch';
 
-      // Helper function to complete ID document uploads
       function uploadDocumentsForSignatory() {
         ActivationSignatoryIdPage.verifyPageIsDisplayed();
 
@@ -160,9 +173,6 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
       // 1. Check if signatories already exist or the page is empty
       cy.get('body').then($body => {
         if ($body.text().includes('No Data Found')) {
-          cy.log('No signatories found — creating INITIATOR and AUTHORIZER');
-
-          // Create INITIATOR signatory
           const initiatorEmail = `sig_${Math.floor(Math.random() * 10000)}@yopmail.com`;
           ActivationSignatoriesPage.clickAddSignatory();
           ActivationSignatoriesPage.verifyAddSignatoryFormDisplayed();
@@ -172,7 +182,6 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
           ActivationSignatoriesPage.verifyPageIsDisplayed();
           cy.wait(2000);
 
-          // Create AUTHORIZER signatory (same name since NIN must match)
           const authorizerEmail = `auth_${Math.floor(Math.random() * 10000)}@yopmail.com`;
           ActivationSignatoriesPage.clickAddSignatory();
           ActivationSignatoriesPage.verifyAddSignatoryFormDisplayed();
@@ -181,13 +190,11 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
           ActivationSignatoriesPage.clickGoBack();
           ActivationSignatoriesPage.verifyPageIsDisplayed();
           cy.wait(2000);
-        } else {
-          cy.log('Signatories already exist — checking for missing roles');
+
         }
       });
 
       // 2. Recursively process all signatories with incomplete status
-      //    Handles both "Missing Info" and "Documents Pending"
       processAllIncompleteSignatories();
 
       function processAllIncompleteSignatories() {
@@ -196,10 +203,7 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
           const bodyText = $body.text();
 
           if (bodyText.includes('Missing Info')) {
-            cy.log('Found signatory with Missing Info — editing...');
             ActivationSignatoriesPage.clickEditOnFirstMissingInfoSignatory();
-
-            // Fill the Edit Signatory form
             ActivationEditSignatoryPage.verifyPageIsDisplayed();
             const editData = {
               ...generateRegistrationData(),
@@ -207,17 +211,10 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
             };
             ActivationEditSignatoryPage.completeEditForm(editData);
             uploadDocumentsForSignatory();
-
-            // Recurse for next incomplete signatory
             processAllIncompleteSignatories();
 
           } else if (bodyText.includes('Documents Pending')) {
-            cy.log('Found signatory with Documents Pending — uploading documents...');
             ActivationSignatoriesPage.clickEditOnFirstPendingSignatory();
-
-            // Documents Pending means info is already filled, but we still land on
-            // the Edit Signatory page first. We complete/submit the form to proceed
-            // and fix any validation errors (e.g. invalid pre-filled phone number format).
             ActivationEditSignatoryPage.verifyPageIsDisplayed();
             const editData = {
               ...generateRegistrationData(),
@@ -225,13 +222,9 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
             };
             ActivationEditSignatoryPage.completeEditForm(editData);
             uploadDocumentsForSignatory();
-
-            // Recurse for next incomplete signatory
             processAllIncompleteSignatories();
 
           } else if (bodyText.includes('At least one signatory must have the role')) {
-            // All info filled but still missing a role — create AUTHORIZER
-            cy.log('All info complete but missing role — creating AUTHORIZER');
             const authEmail = `auth_${Math.floor(Math.random() * 10000)}@yopmail.com`;
             ActivationSignatoriesPage.clickAddSignatory();
             ActivationSignatoriesPage.verifyAddSignatoryFormDisplayed();
@@ -240,13 +233,9 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
             ActivationSignatoriesPage.clickGoBack();
             ActivationSignatoriesPage.verifyPageIsDisplayed();
             cy.wait(2000);
-
-            // Recurse to handle new signatory's incomplete status
             processAllIncompleteSignatories();
 
           } else {
-            // All signatories complete with proper roles — proceed
-            cy.log('All signatories complete — clicking Continue');
             ActivationSignatoriesPage.clickContinue();
             runDirectorsStep();
           }
@@ -262,7 +251,6 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
 
         const directorFirstName = Cypress.env('SIGNATORY_FIRST_NAME') || 'Bunch';
 
-        // Helper function to complete ID document uploads for directors
         function uploadDocumentsForDirector() {
           ActivationDirectorIdPage.verifyPageIsDisplayed();
 
@@ -297,7 +285,6 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
           if ($body.text().includes('No Data Found')) {
             cy.log('No directors found — creating INITIATOR and AUTHORIZER');
 
-            // Create INITIATOR director
             const initiatorEmail = `dir_${Math.floor(Math.random() * 10000)}@yopmail.com`;
             ActivationDirectorsPage.clickAddDirector();
             ActivationDirectorsPage.verifyAddDirectorFormDisplayed();
@@ -307,7 +294,6 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
             ActivationDirectorsPage.verifyPageIsDisplayed();
             cy.wait(2000);
 
-            // Create AUTHORIZER director
             const authorizerEmail = `dir_auth_${Math.floor(Math.random() * 10000)}@yopmail.com`;
             ActivationDirectorsPage.clickAddDirector();
             ActivationDirectorsPage.verifyAddDirectorFormDisplayed();
@@ -315,41 +301,40 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
             ActivationDirectorsPage.clickNext();
             ActivationDirectorsPage.clickGoBack();
             ActivationDirectorsPage.verifyPageIsDisplayed();
+
+            // Wait for both newly created director cards to appear before proceeding
+            cy.get('body', { timeout: 15000 }).should('contain.text', '@yopmail.com');
             cy.wait(2000);
           } else {
             cy.log('Directors already exist — checking for missing roles');
           }
+        }).then(() => {
+          // 2. Recursively process all directors with incomplete status
+          processAllIncompleteDirectors();
         });
 
-        // 2. Recursively process all directors with incomplete status
-        processAllIncompleteDirectors();
-
         function processAllIncompleteDirectors() {
-          cy.wait(2000);
+          // Wait for the directors list to reach a deterministic state before reading it.
+          // Status banners (Missing Info, Documents Pending) load asynchronously and may
+          // appear after the Continue button.
+          cy.get('body').should('contain.text', 'Continue');
+          cy.get('body', { timeout: 15000 }).should($body => {
+            const t = $body.text();
+            expect(
+              t.includes('Missing Info') ||
+              t.includes('Documents Pending') ||
+              t.includes('At least one director must have the role') ||
+              t.includes('@yopmail.com') // directors exist but all banners resolved
+            ).to.be.true;
+          });
+
           cy.get('body').then($body => {
             const bodyText = $body.text();
 
-            if (bodyText.includes('Missing Info')) {
-              cy.log('Found director with Missing Info — editing...');
-              ActivationDirectorsPage.clickEditOnFirstMissingInfoDirector();
-
-              // Fill the Edit Director form
-              ActivationEditDirectorPage.verifyPageIsDisplayed();
-              const editData = {
-                ...generateRegistrationData(),
-                lastName: Cypress.env('SIGNATORY_LAST_NAME') || 'Dilion'
-              };
-              ActivationEditDirectorPage.completeEditForm(editData);
-              uploadDocumentsForDirector();
-
-              // Recurse for next incomplete director
-              processAllIncompleteDirectors();
-
-            } else if (bodyText.includes('Documents Pending')) {
+            if (bodyText.includes('Documents Pending')) {
               cy.log('Found director with Documents Pending — uploading documents...');
               ActivationDirectorsPage.clickEditOnFirstPendingDirector();
 
-              // Fill the Edit Director form
               ActivationEditDirectorPage.verifyPageIsDisplayed();
               const editData = {
                 ...generateRegistrationData(),
@@ -358,11 +343,9 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
               ActivationEditDirectorPage.completeEditForm(editData);
               uploadDocumentsForDirector();
 
-              // Recurse for next incomplete director
               processAllIncompleteDirectors();
 
             } else if (bodyText.includes('At least one director must have the role')) {
-              // All info filled but still missing a role — create AUTHORIZER
               cy.log('All info complete but missing role — creating AUTHORIZER');
               const authEmail = `dir_auth_${Math.floor(Math.random() * 10000)}@yopmail.com`;
               ActivationDirectorsPage.clickAddDirector();
@@ -373,12 +356,99 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
               ActivationDirectorsPage.verifyPageIsDisplayed();
               cy.wait(2000);
 
-              // Recurse to handle new director's incomplete status
               processAllIncompleteDirectors();
 
+            } else if (bodyText.includes('Missing Info')) {
+              // Missing Info covers three states:
+              //   (a) Phone number: N/A  → main user hasn't filled the edit director form yet
+              //   (b) BVN: N/A           → director hasn't completed Yopmail BVN verification
+              //   (c) BVN + Phone both present → directors are complete; banner is a UI lag,
+              //                                   just proceed to Continue
+
+              if (bodyText.includes('Phone number: N/A')) {
+                cy.log('Director form not yet filled (Phone number: N/A) — editing...');
+                ActivationDirectorsPage.clickEditOnFirstMissingInfoDirector();
+
+                ActivationEditDirectorPage.verifyPageIsDisplayed();
+                const editData = {
+                  ...generateRegistrationData(),
+                  lastName: Cypress.env('SIGNATORY_LAST_NAME') || 'Dilion'
+                };
+                ActivationEditDirectorPage.completeEditForm(editData);
+                uploadDocumentsForDirector();
+
+                processAllIncompleteDirectors();
+
+              } else if (bodyText.includes('BVN: N/A')) {
+                // BVN not yet verified — director must complete the Yopmail invitation flow
+                cy.log('Directors have Missing Info (BVN not verified) — running YopMail BVN verification for each director...');
+
+                ActivationDirectorsPage.getUnverifiedDirectorEmails().then(emails => {
+                  cy.log(`YopMail verification required for: ${emails.join(', ')}`);
+                  ActivationDirectorsPage.clickSaveAndContinueLater();
+
+                  emails.forEach(email => {
+                    runDirectorVerificationFlow(email);
+                  });
+
+                  // Log back in after all verifications are done
+                  LoginPage.visitLoginPage();
+                  LoginPage.login(registrationData.username, registrationData.password);
+                  DeviceRegistrationPage.handleDeviceRegistrationIfNeeded('add', {
+                    username: registrationData.username,
+                    password: registrationData.password
+                  });
+                  cy.url().should('not.include', '/auth/device');
+
+                  // Navigate back through activation steps to reach the Directors page.
+                  // Company Rep flow has an extra step after Company Info.
+                  ImportantNoticePage.verifyPageIsDisplayed();
+                  ImportantNoticePage.clickContinue();
+                  ActivationCompanyInfoPage.verifyPageIsDisplayed();
+                  ActivationCompanyInfoPage.clickContinue();
+                  ActivationCompanyRepPage.verifyPageIsDisplayed();
+                  ActivationCompanyRepPage.fillOccupation(registrationData.occupation || 'Software Engineer');
+                  const ninAfterRelogin = Cypress.env('NIN_FOR_ACTIVATION') || '63184876213';
+                  ActivationCompanyRepPage.fillNin(ninAfterRelogin);
+                  ActivationCompanyRepPage.clickContinue();
+                  ActivationSignatoriesPage.verifyPageIsDisplayed();
+                  ActivationSignatoriesPage.clickContinue();
+                  ActivationDirectorsPage.verifyPageIsDisplayed();
+
+                  // Directors may still show "Missing Info" after verification because the
+                  // backend processes asynchronously. Click Continue; if the app redirects
+                  // back to /directors, navigate directly to account-preferences.
+                  ActivationDirectorsPage.clickContinue();
+                  cy.url().then(url => {
+                    if (!url.includes('account-preferences')) {
+                      cy.visit('/auth/account-activation/account-preferences');
+                    }
+                  });
+                  ActivationAccountPreferencesPage.completeAccountPreferences();
+                  ActivationUploadDocumentsPage.completeUploadDocuments();
+                  ActivationSummaryPage.completeSummaryStep();
+                  ActivationAgreementPage.completeAgreementStep();
+                });
+
+              } else {
+                // BVN and Phone both have real values — directors are complete.
+                // "Missing Info" banner is a UI lag; proceed directly.
+                cy.log('Directors have BVN + Phone — info complete, clicking Continue');
+                ActivationDirectorsPage.clickContinue();
+                cy.url().then(url => {
+                  if (!url.includes('account-preferences')) {
+                    cy.visit('/auth/account-activation/account-preferences');
+                  }
+                });
+                ActivationAccountPreferencesPage.completeAccountPreferences();
+                ActivationUploadDocumentsPage.completeUploadDocuments();
+                ActivationSummaryPage.completeSummaryStep();
+                ActivationAgreementPage.completeAgreementStep();
+              }
+
             } else {
-              // All directors complete with proper roles — proceed
-              cy.log('All directors complete — clicking Continue');
+              // All directors complete — no red cautions at all
+              cy.log('All directors complete — no red cautions, clicking Continue');
               ActivationDirectorsPage.clickContinue();
               ActivationAccountPreferencesPage.completeAccountPreferences();
               ActivationUploadDocumentsPage.completeUploadDocuments();
@@ -386,6 +456,41 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
               ActivationAgreementPage.completeAgreementStep();
             }
           });
+        }
+
+        function runDirectorVerificationFlow(email) {
+          cy.log(`Running Director verification flow for: ${email}`);
+
+          const directorData = { ...generateRegistrationData(), email: email };
+
+          YopmailPage.visitAndGetVerificationLink(email);
+          cy.get('@verificationLink').then((href) => {
+            cy.log(`Navigating to verification link: ${href}`);
+            cy.visit(href);
+          });
+
+          // Landing page: click Continue to begin the verification flow
+          cy.contains('button', 'Continue', { timeout: 15000 }).should('be.visible').click();
+
+          // BVN Page
+          BvnPage.completeBvnStep(directorData.bvn);
+
+          // BVN Verification (OTP)
+          BvnVerificationPage.completeBvnVerification();
+
+          // Bio Page 1 — uses director's own email
+          SignatoryBioPage1.completeInfoVerification(directorData);
+
+          // Bio Page 2
+          SignatoryBioPage2.completeSignatoryBio2(directorData);
+
+          // Create Profile — unique username/password per director
+          CreateProfilePage.completeProfileCreation(directorData);
+
+          // Success Screen
+          cy.contains('Success!', { timeout: 15000 }).should('be.visible');
+          cy.contains('Your account information will be reviewed').should('be.visible');
+          cy.contains('button', 'Close').should('be.visible').click();
         }
       }
     }

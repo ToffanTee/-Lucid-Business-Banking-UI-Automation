@@ -35,7 +35,10 @@ class ActivationAgreementPage {
     cy.wait(1000)
     this.elements.checkboxes().should('have.length.greaterThan', 0).each(($el, index) => {
       Logger.info(`Checking agreement checkbox at index ${index}`)
-      cy.wrap($el).click({ force: true })
+      // Scroll into view first, then check via the inner input so Angular
+      // Material registers the state change correctly
+      cy.wrap($el).scrollIntoView()
+      cy.wrap($el).find('input[type="checkbox"]').check({ force: true })
     })
     Logger.info('All agreements checked successfully')
   }
@@ -49,8 +52,8 @@ class ActivationAgreementPage {
 
   verifySuccessModalIsDisplayed() {
     Logger.step('Verifying Success modal is displayed')
-    // Wait for the modal header to be visible (longer timeout if needed, default is fine)
-    this.elements.successHeader().should('be.visible')
+    // Submit triggers an API call — allow up to 30s for the modal to appear
+    this.elements.successHeader().should('be.visible', { timeout: 30000 })
     Logger.info('Success modal displayed successfully')
   }
 

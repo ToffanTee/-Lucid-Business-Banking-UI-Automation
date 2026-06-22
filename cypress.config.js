@@ -55,6 +55,126 @@ module.exports = defineConfig({
       // Node task: Save new user credentials after signup
       // --------------------------------------------------
       on('task', {
+        // Fetch Yopmail inbox from Node.js (no browser) to avoid ESOCKETTIMEDOUT.
+        // cy.visit() on yopmail.com gets blocked at TCP level by anti-bot measures;
+        // a plain Node.js HTTPS request is treated as a regular HTTP client.
+        async getYopmailVerificationLink({ email, maxAttempts = 12, delayMs = 5000 }) {
+          const https = require('https');
+          const username = email.split('@')[0];
+
+          function makeRequest(urlStr, cookieStr = '') {
+            return new Promise((resolve, reject) => {
+              const url = new URL(urlStr);
+              const options = {
+                hostname: url.hostname,
+                path: url.pathname + url.search,
+                method: 'GET',
+                timeout: 20000,
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                  'Accept-Language': 'en-US,en;q=0.5',
+                  'Accept-Encoding': 'identity',
+                  'Connection': 'keep-alive',
+                  ...(cookieStr ? { 'Cookie': cookieStr } : {})
+                }
+              };
+              const req = https.request(options, (res) => {
+                const setCookies = res.headers['set-cookie'] || [];
+                let body = '';
+                res.setEncoding('utf8');
+                res.on('data', chunk => { body += chunk; });
+                res.on('end', () => resolve({ statusCode: res.statusCode, headers: res.headers, setCookies, body }));
+              });
+              req.on('error', reject);
+              req.on('timeout', () => req.destroy(new Error(`Request to ${urlStr} timed out`)));
+              req.end();
+            });
+          }
+
+          function parseCookies(setCookieArray) {
+            const map = {};
+            setCookieArray.forEach(str => {
+              const [kv] = str.split(';');
+              const eqIdx = kv.indexOf('=');
+              if (eqIdx > 0) map[kv.slice(0, eqIdx).trim()] = kv.slice(eqIdx + 1).trim();
+            });
+            return map;
+          }
+
+          function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+          // Step 1: Get main page cookies
+          console.log(`[Yopmail] Starting session for ${email}`);
+          const initResp = await makeRequest('https://yopmail.com/en/');
+          const cookies = parseCookies(initResp.setCookies);
+          console.log(`[Yopmail] Cookies from homepage: ${JSON.stringify(Object.keys(cookies))}`);
+
+          // Step 2: Visit the login page WITH the username — this is what actually
+          // establishes the server-side inbox session. Without this step, the inbox
+          // endpoint returns nothing even if the ywm cookie is set manually.
+          const loginResp = await makeRequest(
+            `https://yopmail.com/en/?login=${encodeURIComponent(username)}`,
+            Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; ')
+          );
+          // Merge any new cookies from the login page
+          Object.assign(cookies, parseCookies(loginResp.setCookies));
+          cookies['ywm'] = username;
+
+          const cookieStr = Object.entries(cookies).map(([k, v]) => `${k}=${v}`).join('; ');
+          // Yopmail renamed their session cookies: yp→yc, ys→yses.
+          // The inbox URL query params are still named yp/ys, so map accordingly.
+          const yp = cookies['yp'] || cookies['yc']   || '';
+          const ys = cookies['ys'] || cookies['yses'] || '';
+          const y  = cookies['y']  || '';
+          console.log(`[Yopmail] Session tokens — yp: "${yp}", ys: "${ys}", y: "${y}"`);
+
+          // URL regex — stop at whitespace, quotes, angle brackets, or square brackets
+          const linkRegex = /(https?:\/\/[^\s"<>\[\]]+\/auth\/onboarding\/[^\s"<>\[\]]+)/;
+
+          for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            if (attempt > 0) await sleep(delayMs);
+            console.log(`[Yopmail] Polling inbox for ${username} (attempt ${attempt + 1}/${maxAttempts})`);
+
+            try {
+              const ts = Date.now();
+              // yp/ys values can contain +, / and = (base64 chars) — must be encoded
+              const inboxUrl = `https://yopmail.com/en/inbox?login=${encodeURIComponent(username)}&p=1&d=&ctrl=&scrl=&spam=false&nc=1&yp=${encodeURIComponent(yp)}&ys=${encodeURIComponent(ys)}&y=${encodeURIComponent(y)}&_=${ts}`;
+              const inboxResp = await makeRequest(inboxUrl, cookieStr);
+
+              // DEBUG: log a slice of the inbox response so we can see what Yopmail returns
+              console.log(`[Yopmail] Inbox response status: ${inboxResp.statusCode}`);
+              console.log(`[Yopmail] Inbox HTML (first 600 chars): ${inboxResp.body.slice(0, 600)}`);
+
+              // Yopmail inbox HTML contains onclick="lire('EMAIL_ID')" on each email row
+              const idMatches = [...inboxResp.body.matchAll(/lire\('([^']+)'\)/g)];
+              if (idMatches.length === 0) {
+                console.log(`[Yopmail] No lire() patterns found — inbox empty or HTML structure changed`);
+                continue;
+              }
+
+              for (const idMatch of idMatches) {
+                const mailUrl = `https://yopmail.com/en/mail.php?login=${encodeURIComponent(username)}&id=${idMatch[1]}`;
+                try {
+                  const mailResp = await makeRequest(mailUrl, cookieStr);
+                  console.log(`[Yopmail] Email HTML (first 600 chars): ${mailResp.body.slice(0, 600)}`);
+                  const linkMatch = mailResp.body.match(linkRegex);
+                  if (linkMatch) {
+                    console.log(`[Yopmail] Found verification link: ${linkMatch[1]}`);
+                    return linkMatch[1];
+                  }
+                } catch (e) {
+                  console.error(`[Yopmail] Error reading email ${idMatch[1]}:`, e.message);
+                }
+              }
+              console.log(`[Yopmail] Emails found but no onboarding link yet, retrying...`);
+            } catch (e) {
+              console.error(`[Yopmail] Inbox fetch error:`, e.message);
+            }
+          }
+
+          throw new Error(`[Yopmail] No verification link found for ${email} after ${maxAttempts} attempts`);
+        },
         saveNewUserCredentials(data) {
           const filePath = path.resolve('cypress/fixtures/newUser.json');
           let dataToSave;

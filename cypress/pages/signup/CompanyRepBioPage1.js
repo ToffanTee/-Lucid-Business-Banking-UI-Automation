@@ -13,10 +13,8 @@ class CompanyRepBioPage1 {
     //   return cy.get('.h-full')
     // },
 
-    // Title dropdown
-    // TODO: Update selector if needed
     titleDropdown() {
-      return cy.get('#mat-select-value-3')
+      return cy.get('mat-select').eq(0)
     },
 
     firstNameInput() {

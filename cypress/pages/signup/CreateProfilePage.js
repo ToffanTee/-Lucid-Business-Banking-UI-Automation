@@ -64,6 +64,10 @@ class CreateProfilePage {
     }
     if (confirmPassword) {
       this.elements.confirmPasswordInput().clear().type(confirmPassword, { delay: 50 })
+      // Click the password field and come back: forces Angular's cross-field validator
+      // to re-run with both fully-entered values, clearing the "do not match" error.
+      this.elements.passwordInput().click()
+      this.elements.confirmPasswordInput().focus().blur()
       Logger.info('Confirm password entered successfully')
     } else {
       Logger.error('Confirm password is empty — cannot enter')
