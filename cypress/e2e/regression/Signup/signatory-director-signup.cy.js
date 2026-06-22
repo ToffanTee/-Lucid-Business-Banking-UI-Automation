@@ -54,13 +54,13 @@ describe('Lucid Business Banking - Signatory/Director Signup', () => {
     // Final assertion
     CreateProfilePage.verifyAccountCreated()
 
-    // Save the newly created user credentials for login tests
-    cy.task('saveNewUserCredentials', {
+    // Save signatory credentials to dedicated env keys for login tests
+    cy.task('saveSignatorySignupCredentials', {
       username: registrationData.username,
       password: registrationData.password,
       email: registrationData.email,
     }).then((savedData) => {
-      cy.log(`New user credentials saved — username: ${savedData.username}`)
+      cy.log(`Signatory credentials saved — username: ${savedData.username}`)
     })
   });
 

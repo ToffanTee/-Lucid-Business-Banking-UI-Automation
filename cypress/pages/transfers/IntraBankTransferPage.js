@@ -68,7 +68,7 @@ class IntraBankTransferPage {
     },
 
     continueButton() {
-      return cy.contains('button', 'Send Money').filter(':visible')
+      return cy.get('.ng-tns-c3740896876-38 > .bg-primary').filter(':visible')
     },
 
     confirmTransferButton() {

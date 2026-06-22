@@ -196,7 +196,7 @@ module.exports = defineConfig({
           const envPath = path.resolve('.env');
           if (fs.existsSync(envPath)) {
             let content = fs.readFileSync(envPath, 'utf-8');
-            
+
             const usernameRegex = /^NEW_USER_USERNAME=.*/m;
             if (usernameRegex.test(content)) {
               content = content.replace(usernameRegex, `NEW_USER_USERNAME=${username}`);
@@ -222,6 +222,88 @@ module.exports = defineConfig({
           process.env.NEW_USER_PASSWORD = password;
 
           return data;
+        },
+
+        saveCompRepSignupCredentials(data) {
+          const envPath = path.resolve('.env');
+          const username = data?.username || '';
+          const password = data?.password || '';
+
+          if (fs.existsSync(envPath)) {
+            let content = fs.readFileSync(envPath, 'utf-8');
+
+            const uRx = /^NEW_COMP_REP_USERNAME=.*/m;
+            content = uRx.test(content)
+              ? content.replace(uRx, `NEW_COMP_REP_USERNAME=${username}`)
+              : content + `\nNEW_COMP_REP_USERNAME=${username}`;
+
+            const pRx = /^NEW_COMP_REP_PASSWORD=.*/m;
+            content = pRx.test(content)
+              ? content.replace(pRx, `NEW_COMP_REP_PASSWORD=${password}`)
+              : content + `\nNEW_COMP_REP_PASSWORD=${password}`;
+
+            fs.writeFileSync(envPath, content, 'utf-8');
+            process.env.NEW_COMP_REP_USERNAME = username;
+            process.env.NEW_COMP_REP_PASSWORD = password;
+            console.log(`NEW_COMP_REP_USERNAME and NEW_COMP_REP_PASSWORD saved to .env`);
+          } else {
+            console.error('.env file not found — cannot save company rep signup credentials');
+          }
+
+          return data;
+        },
+
+        readCompRepSignupCredentials() {
+          const envPath = path.resolve('.env');
+          if (!fs.existsSync(envPath)) return { username: '', password: '' };
+          const content = fs.readFileSync(envPath, 'utf-8');
+          const uMatch = content.match(/^NEW_COMP_REP_USERNAME=(.*)$/m);
+          const pMatch = content.match(/^NEW_COMP_REP_PASSWORD=(.*)$/m);
+          return {
+            username: uMatch ? uMatch[1].trim() : '',
+            password: pMatch ? pMatch[1].trim() : ''
+          };
+        },
+
+        saveSignatorySignupCredentials(data) {
+          const envPath = path.resolve('.env');
+          const username = data?.username || '';
+          const password = data?.password || '';
+
+          if (fs.existsSync(envPath)) {
+            let content = fs.readFileSync(envPath, 'utf-8');
+
+            const uRx = /^NEW_SIGNATORY_USERNAME=.*/m;
+            content = uRx.test(content)
+              ? content.replace(uRx, `NEW_SIGNATORY_USERNAME=${username}`)
+              : content + `\nNEW_SIGNATORY_USERNAME=${username}`;
+
+            const pRx = /^NEW_SIGNATORY_PASSWORD=.*/m;
+            content = pRx.test(content)
+              ? content.replace(pRx, `NEW_SIGNATORY_PASSWORD=${password}`)
+              : content + `\nNEW_SIGNATORY_PASSWORD=${password}`;
+
+            fs.writeFileSync(envPath, content, 'utf-8');
+            process.env.NEW_SIGNATORY_USERNAME = username;
+            process.env.NEW_SIGNATORY_PASSWORD = password;
+            console.log(`NEW_SIGNATORY_USERNAME and NEW_SIGNATORY_PASSWORD saved to .env`);
+          } else {
+            console.error('.env file not found — cannot save signatory signup credentials');
+          }
+
+          return data;
+        },
+
+        readSignatorySignupCredentials() {
+          const envPath = path.resolve('.env');
+          if (!fs.existsSync(envPath)) return { username: '', password: '' };
+          const content = fs.readFileSync(envPath, 'utf-8');
+          const uMatch = content.match(/^NEW_SIGNATORY_USERNAME=(.*)$/m);
+          const pMatch = content.match(/^NEW_SIGNATORY_PASSWORD=(.*)$/m);
+          return {
+            username: uMatch ? uMatch[1].trim() : '',
+            password: pMatch ? pMatch[1].trim() : ''
+          };
         },
 
         readNewUserCredentials() {
@@ -397,6 +479,11 @@ module.exports = defineConfig({
         // New user credentials from .env (populated after registration)
         NEW_USER_USERNAME: process.env.NEW_USER_USERNAME || '',
         NEW_USER_PASSWORD: process.env.NEW_USER_PASSWORD || '',
+        // Per-flow new user credentials (company rep vs signatory signup)
+        NEW_COMP_REP_USERNAME: process.env.NEW_COMP_REP_USERNAME || '',
+        NEW_COMP_REP_PASSWORD: process.env.NEW_COMP_REP_PASSWORD || '',
+        NEW_SIGNATORY_USERNAME: process.env.NEW_SIGNATORY_USERNAME || '',
+        NEW_SIGNATORY_PASSWORD: process.env.NEW_SIGNATORY_PASSWORD || '',
         // Per-spec activation credentials
         ACTIVATION_REP_USERNAME: process.env.ACTIVATION_REP_USERNAME || '',
         ACTIVATION_REP_PASSWORD: process.env.ACTIVATION_REP_PASSWORD || '',

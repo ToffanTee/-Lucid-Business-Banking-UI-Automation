@@ -44,12 +44,56 @@ describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
 
     // Switch to Inter-bank (Other Banks) and verify Destination Bank dropdown appears
     InterBankTransferPage.switchToInterBank();
-    InterBankTransferPage.elements.destinationBankDropdown().should('be.visible');
+    InterBankTransferPage.elements.destinationBankTrigger().should('be.visible');
 
     // Switch back to Intra-bank (First Ally Accounts) and verify Destination Bank dropdown is gone
     IntraBankTransferPage.switchToIntraBank();
-    InterBankTransferPage.elements.destinationBankDropdown().should('not.exist');
+    InterBankTransferPage.elements.destinationBankTrigger().should('not.exist');
   });
+
+   // -------------------------------------------------------
+    // Test 3: Complete a single Inter-bank transfer successfully
+    // -------------------------------------------------------
+    it('Should complete a single Inter-bank transfer successfully', () => {
+      cy.task('readEnvCredentials').then(({ transactionPin }) => {
+        TransfersPage.clickSendMoney();
+        InterBankTransferPage.switchToInterBank();
+  
+        // Fill transfer details
+        InterBankTransferPage.fillDestinationAccount('3410987243');
+        cy.wait(2000); // Wait for any potential API calls triggered by filling the account number
+        InterBankTransferPage.selectDestinationBank('Sterling');
+        InterBankTransferPage.fillAmount('100');
+        InterBankTransferPage.selectSpendingCategory('TRANSPORT');
+        InterBankTransferPage.fillDescription('Automated inter-bank transfer test');
+        InterBankTransferPage.selectScheduleOption('Now');
+  
+        // Proceed to confirmation page
+        InterBankTransferPage.clickContinue();
+  
+        // Confirm transfer details and launch PIN prompt
+        InterBankTransferPage.clickConfirmTransfer();
+  
+        // Enter transaction PIN (123456)
+        InterBankTransferPage.enterTransactionPin(transactionPin);
+  
+        // Confirm after PIN (if applicable - clicking the Confirm button)
+        InterBankTransferPage.clickConfirmTransfer();
+  
+        // Wait for OTP screen to load after PIN submission
+        cy.wait(5000);
+  
+        // Enter OTP (passcode is 654321 on staging)
+        const passcode = Cypress.env('PASSCODE') || '654321';
+        InterBankTransferPage.enterTransactionOtp(passcode);
+  
+        // Confirm after OTP
+        InterBankTransferPage.clickConfirmTransfer();
+  
+        // Verify success state popup
+        InterBankTransferPage.verifyTransferSuccess();
+      });
+    });
 
   // -------------------------------------------------------
   // Negative Test 1: Cannot proceed without selecting a destination bank
@@ -79,8 +123,7 @@ describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
     TransfersPage.clickSendMoney();
     InterBankTransferPage.switchToInterBank();
 
-    // Select a bank but leave account number empty
-    InterBankTransferPage.selectDestinationBank('Access Bank');
+    // Leave account number empty, just fill amount
     InterBankTransferPage.fillAmount('500');
 
     InterBankTransferPage.elements.continueButton().then($btn => {

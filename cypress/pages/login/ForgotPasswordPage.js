@@ -176,7 +176,10 @@ class ForgotPasswordPage {
     fillNewPassword(password) {
         Logger.step('Entering new password...')
         if (password) {
-            this.elements.newPasswordInput().clear().type(password)
+            this.elements.newPasswordInput()
+                .clear()
+                .type(password, { delay: 50, parseSpecialCharSequences: false })
+                .blur()
             Logger.info('New password entered successfully')
         } else {
             Logger.error('New password is empty — cannot enter')
@@ -186,7 +189,10 @@ class ForgotPasswordPage {
     fillConfirmPassword(password) {
         Logger.step('Entering confirm password...')
         if (password) {
-            this.elements.confirmPasswordInput().clear().type(password)
+            this.elements.confirmPasswordInput()
+                .clear()
+                .type(password, { delay: 50, parseSpecialCharSequences: false })
+                .blur()
             Logger.info('Confirm password entered successfully')
         } else {
             Logger.error('Confirm password is empty — cannot enter')
@@ -209,14 +215,6 @@ class ForgotPasswordPage {
         this.fillNewPassword(newPassword)
         this.fillConfirmPassword(newPassword)
         this.clickCreatePasswordContinue()
-
-        // Update the .env file so future test runs use the new password
-        cy.task('updateEnvPassword', newPassword).then(() => {
-            Logger.info('Password updated in .env file successfully')
-            // Update the in-memory Cypress env so the next test in the same run uses it
-            Cypress.env('EXISTING_USER_PASSWORD', newPassword)
-        })
-
         Logger.info('New password submitted successfully')
     }
 

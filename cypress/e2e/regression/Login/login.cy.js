@@ -30,26 +30,36 @@ describe('Lucid Business Banking - Login', () => {
   });
 
   // -------------------------------------------------------
-  // Test: Login with newly created user (from signup test)
+  // Test: Login with newly created Company Rep user (from signup test)
   // -------------------------------------------------------
-  it('Should successfully login with newly created user credentials', function () {
-    cy.task('readNewUserEnvCredentials').then((newUser) => {
-      const username = newUser?.username;
-      const password = newUser?.password;
-
-      // Skip gracefully if no new user has been created yet
+  it('Should successfully login with newly created Company Rep user credentials', function () {
+    cy.task('readCompRepSignupCredentials').then(({ username, password }) => {
       if (!username || !password) {
-        cy.log('No new user credentials found in .env — run a signup test first');
+        cy.log('No company rep credentials found in .env — run the company rep signup test first');
         this.skip();
       }
 
-      cy.log(`Logging in as newly created user: ${username}`);
+      cy.log(`Logging in as newly created company rep: ${username}`);
       LoginPage.login(username, password);
 
-      // Handle device registration for new user too (guaranteed first-time registration)
       DeviceRegistrationPage.completeDeviceRegistration();
+    });
+  });
 
-      // Assert successful login — user should be on the dashboard
+  // -------------------------------------------------------
+  // Test: Login with newly created Signatory/Director user (from signup test)
+  // -------------------------------------------------------
+  it('Should successfully login with newly created Signatory/Director user credentials', function () {
+    cy.task('readSignatorySignupCredentials').then(({ username, password }) => {
+      if (!username || !password) {
+        cy.log('No signatory credentials found in .env — run the signatory/director signup test first');
+        this.skip();
+      }
+
+      cy.log(`Logging in as newly created signatory/director: ${username}`);
+      LoginPage.login(username, password);
+
+      DeviceRegistrationPage.completeDeviceRegistration();
     });
   });
 

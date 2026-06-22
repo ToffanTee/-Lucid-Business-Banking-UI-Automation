@@ -17,12 +17,14 @@ describe('Lucid Business Banking - Forgot Password', () => {
       cy.log(`Resetting password for user: ${username}`);
       cy.log(`New password will be: ${newPassword}`);
 
-      // Run the complete forgot password flow
       // Step 1: Enter username → Step 2: Validate passcode → Step 3: Create new password
       ForgotPasswordPage.completeForgotPasswordFlow(username, newPassword);
 
-      // The .env file is automatically updated with the new password
-      // via the cy.task('updateEnvPassword') call inside submitNewPassword()
+      // Only save the new password after the flow succeeds
+      cy.task('updateEnvPassword', newPassword).then(() => {
+        Cypress.env('EXISTING_USER_PASSWORD', newPassword);
+        cy.log(`EXISTING_USER_PASSWORD updated to: ${newPassword}`);
+      });
     });
   });
 

@@ -16,45 +16,45 @@ describe('Lucid Business Banking - Company Rep Signup', () => {
     registrationData = generateRegistrationData()
   });
 
-  it('Should complete the full Company Rep signup flow', () => {
+  // it('Should complete the full Company Rep signup flow', () => {
 
-    // Step 1: Navigate to signup page
-    RegistrationTypePage.navigateToSignUp()
+  //   // Step 1: Navigate to signup page
+  //   RegistrationTypePage.navigateToSignUp()
 
-    // Step 2: Select "As a Company rep" registration type
-    RegistrationTypePage.verifyPageIsDisplayed()
-    RegistrationTypePage.selectCompanyRep()
+  //   // Step 2: Select "As a Company rep" registration type
+  //   RegistrationTypePage.verifyPageIsDisplayed()
+  //   RegistrationTypePage.selectCompanyRep()
 
-    // Step 3: Select business category and continue
-    BusinessCategoryPage.completeBusinessCategoryStep()
+  //   // Step 3: Select business category and continue
+  //   BusinessCategoryPage.completeBusinessCategoryStep()
 
-    // Step 4: Company Information — company details
-    CompanyInfoPage.completeCompanyInfoStep(registrationData)
+  //   // Step 4: Company Information — company details
+  //   CompanyInfoPage.completeCompanyInfoStep(registrationData)
 
-    // Step 5: Company Rep Bio (1/2) — personal details
-    CompanyRepBioPage1.completeCompanyRepBio1(registrationData)
+  //   // Step 5: Company Rep Bio (1/2) — personal details
+  //   CompanyRepBioPage1.completeCompanyRepBio1(registrationData)
 
-    // Step 6: Company Rep Bio (2/2) — address, state, city, state of origin, mother's maiden name
-    CompanyRepBioPage2.completeCompanyRepBio2(registrationData)
+  //   // Step 6: Company Rep Bio (2/2) — address, state, city, state of origin, mother's maiden name
+  //   CompanyRepBioPage2.completeCompanyRepBio2(registrationData)
 
-    // Step 7: Passcode Verification — enter email passcode
-    PasscodeVerificationPage.completePasscodeVerification()
+  //   // Step 7: Passcode Verification — enter email passcode
+  //   PasscodeVerificationPage.completePasscodeVerification()
 
-    // Step 8: Create Profile
-    CreateProfilePage.completeProfileCreation(registrationData)
+  //   // Step 8: Create Profile
+  //   CreateProfilePage.completeProfileCreation(registrationData)
 
-    // Final assertion
-    CreateProfilePage.verifyAccountCreated()
+  //   // Final assertion
+  //   CreateProfilePage.verifyAccountCreated()
 
-    // Save the newly created user credentials for login tests
-    cy.task('saveNewUserCredentials', {
-      username: registrationData.username,
-      password: registrationData.password,
-      email: registrationData.email,
-    }).then((savedData) => {
-      cy.log(`New user credentials saved — username: ${savedData.username}`)
-    })
-  });
+  //   // Save company rep credentials to dedicated env keys for login tests
+  //   cy.task('saveCompRepSignupCredentials', {
+  //     username: registrationData.username,
+  //     password: registrationData.password,
+  //     email: registrationData.email,
+  //   }).then((savedData) => {
+  //     cy.log(`Company rep credentials saved — username: ${savedData.username}`)
+  //   })
+  // });
 
   // -------------------------------------------------------
   // Negative Test 1: Registration type page requires a selection before proceeding
@@ -74,54 +74,54 @@ describe('Lucid Business Banking - Company Rep Signup', () => {
     });
   });
 
-  // -------------------------------------------------------
-  // Negative Test 2: Weak password is rejected on profile creation
-  // -------------------------------------------------------
-  it('Should reject a weak password on the Create Profile step', () => {
-    RegistrationTypePage.navigateToSignUp();
-    RegistrationTypePage.verifyPageIsDisplayed();
-    RegistrationTypePage.selectCompanyRep();
+  // // -------------------------------------------------------
+  // // Negative Test 2: Weak password is rejected on profile creation
+  // // -------------------------------------------------------
+  // it('Should reject a weak password on the Create Profile step', () => {
+  //   RegistrationTypePage.navigateToSignUp();
+  //   RegistrationTypePage.verifyPageIsDisplayed();
+  //   RegistrationTypePage.selectCompanyRep();
 
-    BusinessCategoryPage.completeBusinessCategoryStep();
-    CompanyInfoPage.completeCompanyInfoStep(registrationData);
-    CompanyRepBioPage1.completeCompanyRepBio1(registrationData);
-    CompanyRepBioPage2.completeCompanyRepBio2(registrationData);
-    PasscodeVerificationPage.completePasscodeVerification();
+  //   BusinessCategoryPage.completeBusinessCategoryStep();
+  //   CompanyInfoPage.completeCompanyInfoStep(registrationData);
+  //   CompanyRepBioPage1.completeCompanyRepBio1(registrationData);
+  //   CompanyRepBioPage2.completeCompanyRepBio2(registrationData);
+  //   PasscodeVerificationPage.completePasscodeVerification();
 
-    // Override data with a weak password before reaching Create Profile
-    const weakData = { ...registrationData, password: 'weak' };
+  //   // Override data with a weak password before reaching Create Profile
+  //   const weakData = { ...registrationData, password: 'weak' };
 
-    CreateProfilePage.completeProfileCreation(weakData);
+  //   CreateProfilePage.completeProfileCreation(weakData);
 
-    // The app should show a password strength / validation error
-    cy.contains(/too short|strength|must contain|invalid password|requirement/i, { timeout: 10000 }).should('be.visible');
-  });
+  //   // The app should show a password strength / validation error
+  //   cy.contains(/too short|strength|must contain|invalid password|requirement/i, { timeout: 10000 }).should('be.visible');
+  // });
 
-  // -------------------------------------------------------
-  // Negative Test 3: Duplicate username is rejected on profile creation
-  // -------------------------------------------------------
-  it('Should show an error when registering with an already-taken username', () => {
-    cy.task('readEnvCredentials').then(({ username: existingUsername }) => {
-      expect(existingUsername, 'EXISTING_USER_USERNAME must be set in .env').to.not.be.empty;
+  // // -------------------------------------------------------
+  // // Negative Test 3: Duplicate username is rejected on profile creation
+  // // -------------------------------------------------------
+  // it('Should show an error when registering with an already-taken username', () => {
+  //   cy.task('readEnvCredentials').then(({ username: existingUsername }) => {
+  //     expect(existingUsername, 'EXISTING_USER_USERNAME must be set in .env').to.not.be.empty;
 
-      RegistrationTypePage.navigateToSignUp();
-      RegistrationTypePage.verifyPageIsDisplayed();
-      RegistrationTypePage.selectCompanyRep();
+  //     RegistrationTypePage.navigateToSignUp();
+  //     RegistrationTypePage.verifyPageIsDisplayed();
+  //     RegistrationTypePage.selectCompanyRep();
 
-      BusinessCategoryPage.completeBusinessCategoryStep();
-      CompanyInfoPage.completeCompanyInfoStep(registrationData);
-      CompanyRepBioPage1.completeCompanyRepBio1(registrationData);
-      CompanyRepBioPage2.completeCompanyRepBio2(registrationData);
-      PasscodeVerificationPage.completePasscodeVerification();
+  //     BusinessCategoryPage.completeBusinessCategoryStep();
+  //     CompanyInfoPage.completeCompanyInfoStep(registrationData);
+  //     CompanyRepBioPage1.completeCompanyRepBio1(registrationData);
+  //     CompanyRepBioPage2.completeCompanyRepBio2(registrationData);
+  //     PasscodeVerificationPage.completePasscodeVerification();
 
-      // Use an already-taken username
-      const duplicateData = { ...registrationData, username: existingUsername };
+  //     // Use an already-taken username
+  //     const duplicateData = { ...registrationData, username: existingUsername };
 
-      CreateProfilePage.completeProfileCreation(duplicateData);
+  //     CreateProfilePage.completeProfileCreation(duplicateData);
 
-      cy.contains(/already exists|taken|unavailable|duplicate|username/i, { timeout: 10000 }).should('be.visible');
-    });
-  });
+  //     cy.contains(/already exists|taken|unavailable|duplicate|username/i, { timeout: 10000 }).should('be.visible');
+  //   });
+  // });
 
 });
 

@@ -36,19 +36,12 @@ class InterBankTransferPage {
         .find('input')
     },
 
-    destinationBankDropdown() {
-      return cy.get('body').then($body => {
-        if ($body.text().includes('Destination Bank')) {
-          return this.formContainer()
-            .contains('Destination Bank')
-            .parents()
-            .filter((idx, el) => Cypress.$(el).find('mat-select, select, .mat-mdc-select').length > 0)
-            .first()
-            .find('mat-select, select, .mat-mdc-select')
-        } else {
-          return cy.get('#non-existent-destination-bank-dropdown')
-        }
-      })
+    destinationBankTrigger() {
+      return cy.contains('Select Destination bank')
+    },
+
+    destinationBankSearchInput() {
+      return cy.get('input[placeholder="Search..."]').filter(':visible').first()
     },
 
     amountInput() {
@@ -78,8 +71,8 @@ class InterBankTransferPage {
         .find('input')
     },
 
-    continueButton() {
-      return cy.contains('button', 'Send Money').filter(':visible')
+     continueButton() {
+      return cy.get('.ng-tns-c3740896876-38 > .bg-primary').filter(':visible')
     },
 
     confirmTransferButton() {
@@ -131,8 +124,17 @@ class InterBankTransferPage {
    */
   selectDestinationBank(bankName) {
     Logger.step(`Selecting destination bank: ${bankName}`)
-    this.elements.destinationBankDropdown().click()
-    cy.contains('mat-option', bankName).click()
+    this.elements.destinationBankTrigger().click()
+    this.elements.destinationBankSearchInput()
+      .type(bankName)
+    cy.contains(new RegExp(bankName, 'i'), { timeout: 10000 })
+      .first()
+      .click({ force: true })
+    cy.get('body').then($body => {
+      if ($body.find('.mat-mdc-dialog-content').length > 0) {
+        cy.get('body').type('{esc}')
+      }
+    })
     Logger.info(`Destination bank ${bankName} selected`)
   }
 
