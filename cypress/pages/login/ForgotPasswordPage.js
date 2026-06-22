@@ -90,7 +90,8 @@ class ForgotPasswordPage {
     fillUsername(username) {
         Logger.step('Entering username...')
         if (username) {
-            this.elements.usernameInput().clear().type(username)
+            this.elements.usernameInput().clear()
+            this.elements.usernameInput().type(username)
             Logger.info('Username entered successfully')
         } else {
             Logger.error('Username is empty — cannot enter')
