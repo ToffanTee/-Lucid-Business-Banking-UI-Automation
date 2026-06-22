@@ -180,7 +180,6 @@ class ForgotPasswordPage {
             this.elements.newPasswordInput()
                 .clear()
                 .type(password, { delay: 50, parseSpecialCharSequences: false })
-                .blur()
             Logger.info('New password entered successfully')
         } else {
             Logger.error('New password is empty — cannot enter')
@@ -202,7 +201,10 @@ class ForgotPasswordPage {
 
     clickCreatePasswordContinue() {
         Logger.step('Clicking Continue button on Create New Password step')
-        this.elements.createPasswordContinueButton().should('be.visible').click()
+        this.elements.createPasswordContinueButton()
+            .should('be.visible')
+            .should('not.be.disabled')
+            .click()
         Logger.info('Create New Password Continue button clicked successfully')
     }
 
