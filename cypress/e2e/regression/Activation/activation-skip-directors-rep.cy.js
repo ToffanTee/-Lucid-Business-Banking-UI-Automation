@@ -20,6 +20,10 @@ import ActivationUploadDocumentsPage from '../../../pages/activation/ActivationU
 import ActivationSummaryPage from '../../../pages/activation/ActivationSummaryPage';
 import ActivationAgreementPage from '../../../pages/activation/ActivationAgreementPage';
 
+const ACTIVATION_USERNAME_KEY = 'ACTIVATION_SKIP_REP_USERNAME';
+const ACTIVATION_PASSWORD_KEY = 'ACTIVATION_SKIP_REP_PASSWORD';
+const ACTIVATION_FIXTURE_FILE = 'activation-skip-rep.json';
+
 describe('Lucid Business Banking - Account Activation Flow (Company Rep - Skipping Directors)', () => {
   let registrationData;
 
@@ -28,25 +32,24 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep - Skippi
   });
 
   it('Should complete signup (if needed), login, and verify activation flow, skipping Directors step', () => {
-    // Check if new user info is already saved from a previous run and matches what is in .env
-    cy.task('readNewUserEnvCredentials').then((envUser) => {
-      cy.task('readNewUserCredentials').then((existingNewUser) => {
-        const hasEnvCreds = envUser && envUser.username && envUser.password;
-        const hasFixtureCreds = existingNewUser && existingNewUser.username && existingNewUser.password;
-
-        if (hasEnvCreds && hasFixtureCreds && existingNewUser.username === envUser.username) {
-          cy.log('Found matching existing new user credentials. Skipping signup...');
-          registrationData = existingNewUser;
-          runLoginAndActivationFlow();
-        } else {
-          cy.log('No matching existing credentials found (or they were cleared from .env). Running full signup...');
-          // Clear the fixture/cache to keep it clean
-          cy.task('saveNewUserCredentials', {}).then(() => {
-            runFullSignupFlow();
+    cy.task('readActivationCredentials', { usernameKey: ACTIVATION_USERNAME_KEY, passwordKey: ACTIVATION_PASSWORD_KEY })
+      .then(({ username, password }) => {
+        if (username && password) {
+          cy.log('Found saved activation credentials — loading registration data from fixture...');
+          cy.task('readActivationFixture', { fixtureFile: ACTIVATION_FIXTURE_FILE }).then((savedData) => {
+            if (savedData && savedData.username === username) {
+              registrationData = savedData;
+              runLoginAndActivationFlow();
+            } else {
+              cy.log('Fixture missing or mismatched — running full signup...');
+              runFullSignupFlow();
+            }
           });
+        } else {
+          cy.log('No saved credentials found — running full signup...');
+          runFullSignupFlow();
         }
       });
-    });
 
     function runFullSignupFlow() {
       RegistrationTypePage.navigateToSignUp();
@@ -61,7 +64,12 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep - Skippi
       CreateProfilePage.completeProfileCreation(registrationData);
       CreateProfilePage.verifyAccountCreated();
 
-      cy.task('saveNewUserCredentials', registrationData).then(() => {
+      cy.task('saveActivationCredentials', {
+        usernameKey: ACTIVATION_USERNAME_KEY,
+        passwordKey: ACTIVATION_PASSWORD_KEY,
+        fixtureFile: ACTIVATION_FIXTURE_FILE,
+        data: registrationData
+      }).then(() => {
         runLoginAndActivationFlow();
       });
     }
@@ -70,14 +78,11 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep - Skippi
       LoginPage.visitLoginPage();
       LoginPage.login(registrationData.username, registrationData.password);
 
-      DeviceRegistrationPage.handleDeviceRegistrationIfNeeded();
-      cy.url().should('not.include', '/auth/device');
-
-      cy.url().then((url) => {
-        if (url.includes('/login')) {
-          LoginPage.login(registrationData.username, registrationData.password);
-        }
+      DeviceRegistrationPage.handleDeviceRegistrationIfNeeded('add', {
+        username: registrationData.username,
+        password: registrationData.password
       });
+      cy.url().should('not.include', '/auth/device');
 
       ImportantNoticePage.verifyPageIsDisplayed();
       ImportantNoticePage.clickContinue();
@@ -193,6 +198,21 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep - Skippi
         cy.wait(3000);
         cy.log('Skipping optional Directors step by clicking Continue');
         ActivationDirectorsPage.clickContinue();
+
+        // App may show a confirmation dialog when proceeding with no directors — dismiss it
+        cy.wait(1500);
+        cy.get('body').then($body => {
+          if ($body.find('mat-dialog-container, [role="dialog"]').length > 0) {
+            cy.log('Confirmation dialog detected — accepting skip...');
+            cy.get('mat-dialog-container, [role="dialog"]')
+              .contains('button', /yes|continue|skip|confirm|ok/i)
+              .click({ force: true });
+          }
+        });
+
+        // Wait for navigation away from the Directors page before proceeding
+        cy.url().should('not.include', '/directors', { timeout: 15000 });
+
         ActivationAccountPreferencesPage.completeAccountPreferences();
         ActivationUploadDocumentsPage.completeUploadDocuments();
         ActivationSummaryPage.completeSummaryStep();

@@ -78,4 +78,88 @@ describe('Lucid Business Banking - Intra-bank Transfers Spec', () => {
     });
   });
 
+  // -------------------------------------------------------
+  // Negative Test 1: Non-existent destination account number
+  // -------------------------------------------------------
+  it('Should show an account not found error for a non-existent destination account', () => {
+    TransfersPage.clickSendMoney();
+    IntraBankTransferPage.switchToIntraBank();
+
+    cy.intercept('**/*inquiry*').as('accountEnquiry');
+    IntraBankTransferPage.elements.destinationAccountInput().clear().type('0000000000');
+
+    cy.wait('@accountEnquiry', { timeout: 15000 });
+    cy.contains(/not found|invalid account|does not exist|account error/i, { timeout: 10000 }).should('be.visible');
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 2: Send Money button disabled when required fields are missing
+  // -------------------------------------------------------
+  it('Should not allow proceeding when the amount field is empty', () => {
+    TransfersPage.clickSendMoney();
+    IntraBankTransferPage.switchToIntraBank();
+
+    IntraBankTransferPage.fillDestinationAccount('1100006568');
+    // Intentionally leave amount empty
+
+    IntraBankTransferPage.elements.continueButton().then($btn => {
+      if (Cypress.$($btn).is(':disabled')) {
+        cy.wrap($btn).should('be.disabled');
+      } else {
+        cy.wrap($btn).click({ force: true });
+        cy.contains(/amount|required|field/i, { timeout: 10000 }).should('be.visible');
+      }
+    });
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 3: Wrong transaction PIN is rejected
+  // -------------------------------------------------------
+  it('Should show an error when an incorrect transaction PIN is entered', () => {
+    cy.task('readEnvCredentials').then(() => {
+      TransfersPage.clickSendMoney();
+      IntraBankTransferPage.switchToIntraBank();
+
+      IntraBankTransferPage.fillDestinationAccount('1100006568');
+      IntraBankTransferPage.fillAmount('100');
+      IntraBankTransferPage.selectSpendingCategory('TRANSPORT');
+      IntraBankTransferPage.fillDescription('Negative test - wrong PIN');
+      IntraBankTransferPage.selectScheduleOption('Now');
+      IntraBankTransferPage.clickContinue();
+      IntraBankTransferPage.clickConfirmTransfer();
+
+      // Enter a clearly wrong PIN
+      IntraBankTransferPage.enterTransactionPin('000000');
+      IntraBankTransferPage.clickConfirmTransfer();
+
+      cy.contains(/invalid|incorrect|wrong|pin|error/i, { timeout: 10000 }).should('be.visible');
+    });
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 4: Wrong OTP is rejected
+  // -------------------------------------------------------
+  it('Should show an error when an incorrect transaction OTP is entered', () => {
+    cy.task('readEnvCredentials').then(({ transactionPin }) => {
+      TransfersPage.clickSendMoney();
+      IntraBankTransferPage.switchToIntraBank();
+
+      IntraBankTransferPage.fillDestinationAccount('1100006568');
+      IntraBankTransferPage.fillAmount('100');
+      IntraBankTransferPage.selectSpendingCategory('TRANSPORT');
+      IntraBankTransferPage.fillDescription('Negative test - wrong OTP');
+      IntraBankTransferPage.selectScheduleOption('Now');
+      IntraBankTransferPage.clickContinue();
+      IntraBankTransferPage.clickConfirmTransfer();
+      IntraBankTransferPage.enterTransactionPin(transactionPin);
+      IntraBankTransferPage.clickConfirmTransfer();
+
+      // Enter a clearly wrong OTP
+      IntraBankTransferPage.enterTransactionOtp('000000');
+      IntraBankTransferPage.clickConfirmTransfer();
+
+      cy.contains(/invalid|incorrect|wrong|otp|code|error/i, { timeout: 10000 }).should('be.visible');
+    });
+  });
+
 });

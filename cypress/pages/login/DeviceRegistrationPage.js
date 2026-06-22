@@ -135,8 +135,11 @@ class DeviceRegistrationPage {
    * If the URL contains '/auth/device', runs the full device registration flow.
    * Otherwise, skips — the user has been directed straight to the dashboard.
    * @param {'add' | 'switch'} deviceAction — 'add' to add this device, 'switch' to switch to this device
+   * @param {{ username: string, password: string }} [credentials] — optional credentials to use for re-login.
+   *   When provided, these are used instead of readEnvCredentials (useful for activation specs that
+   *   log in with their own spec-specific user, not the EXISTING_USER).
    */
-  handleDeviceRegistrationIfNeeded(deviceAction = 'add') {
+  handleDeviceRegistrationIfNeeded(deviceAction = 'add', credentials = null) {
     // Wait for the URL to change away from the login page before checking
     // This prevents a race condition where Cypress checks the URL before the app has time to redirect
     cy.url().should('not.include', '/login').then((url) => {
@@ -151,15 +154,23 @@ class DeviceRegistrationPage {
         cy.url().then((newUrl) => {
           if (newUrl.includes('/login')) {
             Logger.step('Redirected to login after device registration. Logging in again...')
-            cy.task('readEnvCredentials').then(({ username, password }) => {
+
+            // Use caller-supplied credentials if available, otherwise fall back to .env
+            const loginWithCredentials = ({ username, password }) => {
               if (username && password) {
                 cy.get('app-custom-input').eq(0).find('.input').clear().type(username)
                 cy.get('app-custom-input').eq(1).find('.input').clear().type(password)
                 cy.contains('button', 'Login').click()
               } else {
-                Logger.error('Auto-login failed: username or password not found in env')
+                Logger.error('Auto-login failed: username or password not found')
               }
-            })
+            }
+
+            if (credentials && credentials.username && credentials.password) {
+              loginWithCredentials(credentials)
+            } else {
+              cy.task('readEnvCredentials').then(loginWithCredentials)
+            }
           }
         })
       } else {

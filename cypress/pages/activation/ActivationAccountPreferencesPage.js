@@ -36,6 +36,7 @@ class ActivationAccountPreferencesPage {
 
   verifyPageIsDisplayed() {
     Logger.step('Verifying Account Preferences page is displayed')
+    cy.url().should('include', 'account-preferences', { timeout: 15000 })
     this.elements.stepHeader().should('be.visible')
     Logger.info('Account Preferences page displayed successfully')
   }

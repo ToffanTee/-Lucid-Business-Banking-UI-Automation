@@ -22,6 +22,11 @@ import ActivationAccountPreferencesPage from '../../../pages/activation/Activati
 import ActivationUploadDocumentsPage from '../../../pages/activation/ActivationUploadDocumentsPage';
 import ActivationSummaryPage from '../../../pages/activation/ActivationSummaryPage';
 import ActivationAgreementPage from '../../../pages/activation/ActivationAgreementPage';
+import YopmailPage from '../../../pages/yopmail/YopmailPage';
+
+const ACTIVATION_USERNAME_KEY = 'ACTIVATION_SIG_USERNAME';
+const ACTIVATION_PASSWORD_KEY = 'ACTIVATION_SIG_PASSWORD';
+const ACTIVATION_FIXTURE_FILE = 'activation-sig.json';
 
 describe('Lucid Business Banking - Account Activation Flow (Signatory/Director)', () => {
 
@@ -34,25 +39,24 @@ describe('Lucid Business Banking - Account Activation Flow (Signatory/Director)'
 
   it('Should complete signup (if needed), login, and verify activation as Signatory/Director', () => {
 
-    // Check if new user info is already saved from a previous run and matches what is in .env
-    cy.task('readNewUserEnvCredentials').then((envUser) => {
-      cy.task('readNewUserCredentials').then((existingNewUser) => {
-        const hasEnvCreds = envUser && envUser.username && envUser.password;
-        const hasFixtureCreds = existingNewUser && existingNewUser.username && existingNewUser.password;
-
-        if (hasEnvCreds && hasFixtureCreds && existingNewUser.username === envUser.username) {
-          cy.log('Found matching existing new user credentials. Skipping signup...');
-          registrationData = existingNewUser;
-          runLoginAndActivationFlow();
-        } else {
-          cy.log('No matching existing credentials found (or they were cleared from .env). Running full signup...');
-          // Clear the fixture/cache to keep it clean
-          cy.task('saveNewUserCredentials', {}).then(() => {
-            runFullSignupFlow();
+    cy.task('readActivationCredentials', { usernameKey: ACTIVATION_USERNAME_KEY, passwordKey: ACTIVATION_PASSWORD_KEY })
+      .then(({ username, password }) => {
+        if (username && password) {
+          cy.log('Found saved activation credentials — loading registration data from fixture...');
+          cy.task('readActivationFixture', { fixtureFile: ACTIVATION_FIXTURE_FILE }).then((savedData) => {
+            if (savedData && savedData.username === username) {
+              registrationData = savedData;
+              runLoginAndActivationFlow();
+            } else {
+              cy.log('Fixture missing or mismatched — running full signup...');
+              runFullSignupFlow();
+            }
           });
+        } else {
+          cy.log('No saved credentials found — running full signup...');
+          runFullSignupFlow();
         }
       });
-    });
 
     function runFullSignupFlow() {
       // Phase 1: Complete User Signup (Signatory/Director path)
@@ -85,8 +89,12 @@ describe('Lucid Business Banking - Account Activation Flow (Signatory/Director)'
       CreateProfilePage.completeProfileCreation(registrationData);
       CreateProfilePage.verifyAccountCreated();
 
-      // Save the credentials (also writes to .env)
-      cy.task('saveNewUserCredentials', registrationData).then(() => {
+      cy.task('saveActivationCredentials', {
+        usernameKey: ACTIVATION_USERNAME_KEY,
+        passwordKey: ACTIVATION_PASSWORD_KEY,
+        fixtureFile: ACTIVATION_FIXTURE_FILE,
+        data: registrationData
+      }).then(() => {
         runLoginAndActivationFlow();
       });
     }
@@ -101,18 +109,13 @@ describe('Lucid Business Banking - Account Activation Flow (Signatory/Director)'
       // ==========================================
       // Phase 3: Register Device (First login requirement)
       // ==========================================
-      DeviceRegistrationPage.handleDeviceRegistrationIfNeeded();
+      DeviceRegistrationPage.handleDeviceRegistrationIfNeeded('add', {
+        username: registrationData.username,
+        password: registrationData.password
+      });
 
       // Wait for the URL to change away from the device registration page if it was loaded
       cy.url().should('not.include', '/auth/device');
-
-      // If we got redirected back to login page (post device registration), log in again
-      cy.url().then((url) => {
-        if (url.includes('/login')) {
-          cy.log('Redirected to login after device registration. Logging in again...');
-          LoginPage.login(registrationData.username, registrationData.password);
-        }
-      });
 
       // ==========================================
       // Phase 4: Account Activation Flow
@@ -330,18 +333,22 @@ describe('Lucid Business Banking - Account Activation Flow (Signatory/Director)'
           } else {
             cy.log('Directors already exist — checking for missing roles');
           }
+        }).then(() => {
+          // 2. Recursively process all directors with incomplete status
+          processAllIncompleteDirectors();
         });
-
-        // 2. Recursively process all directors with incomplete status
-        processAllIncompleteDirectors();
 
         function processAllIncompleteDirectors() {
           cy.wait(2000);
+          
+          // Ensure the page has fully loaded before checking text (wait for continue button or director cards to be visible)
+          cy.get('body').should('contain.text', 'Continue');
+          
           cy.get('body').then($body => {
             const bodyText = $body.text();
 
-            if (bodyText.includes('Missing Info')) {
-              cy.log('Found director with Missing Info — editing...');
+            if (bodyText.includes('Phone number: N/A')) {
+              cy.log('Found director with Phone number: N/A — editing...');
               ActivationDirectorsPage.clickEditOnFirstMissingInfoDirector();
 
               // Fill the Edit Director form
@@ -388,15 +395,90 @@ describe('Lucid Business Banking - Account Activation Flow (Signatory/Director)'
               processAllIncompleteDirectors();
 
             } else {
-              // All directors complete with proper roles — proceed
-              cy.log('All directors complete — clicking Continue');
-              ActivationDirectorsPage.clickContinue();
-              ActivationAccountPreferencesPage.completeAccountPreferences();
-              ActivationUploadDocumentsPage.completeUploadDocuments();
-              ActivationSummaryPage.completeSummaryStep();
-              ActivationAgreementPage.completeAgreementStep();
+              // At this point, there are NO Phone number: N/A, NO Documents Pending, NO missing role errors.
+              // BUT they might still have "Missing Info" label because they aren't verified by Yopmail yet!
+              cy.log('All directors\' information filled. Checking for verification needs...');
+              
+              ActivationDirectorsPage.getUnverifiedDirectorEmails().then(emails => {
+                if (emails.length > 0) {
+                  cy.log(`Directors need verification: ${emails.join(', ')}. Clicking Save and Continue Later.`);
+                  ActivationDirectorsPage.clickSaveAndContinueLater();
+                  
+                  // Run Yopmail Verification flow for each email
+                  emails.forEach(email => {
+                     runDirectorVerificationFlow(email);
+                  });
+                  
+                  // After all are verified, log back in
+                  LoginPage.visitLoginPage();
+                  LoginPage.login(registrationData.username, registrationData.password);
+                  DeviceRegistrationPage.handleDeviceRegistrationIfNeeded('add', {
+                    username: registrationData.username,
+                    password: registrationData.password
+                  });
+                  cy.url().should('not.include', '/auth/device');
+                  
+                  // Now we need to get back to Directors page
+                  ImportantNoticePage.verifyPageIsDisplayed();
+                  ImportantNoticePage.clickContinue();
+                  ActivationCompanyInfoPage.verifyPageIsDisplayed();
+                  ActivationCompanyInfoPage.clickContinue();
+                  ActivationSignatoriesPage.verifyPageIsDisplayed();
+                  ActivationSignatoriesPage.clickContinue();
+                  ActivationDirectorsPage.verifyPageIsDisplayed();
+                  
+                  // Check that no "Missing Info" remains
+                  cy.get('body').should('not.contain', 'Missing Info');
+                  
+                  ActivationDirectorsPage.clickContinue();
+                  ActivationAccountPreferencesPage.completeAccountPreferences();
+                  ActivationUploadDocumentsPage.completeUploadDocuments();
+                  ActivationSummaryPage.completeSummaryStep();
+                  ActivationAgreementPage.completeAgreementStep();
+                } else {
+                  // If for some reason there are no emails to verify
+                  ActivationDirectorsPage.clickContinue();
+                  ActivationAccountPreferencesPage.completeAccountPreferences();
+                  ActivationUploadDocumentsPage.completeUploadDocuments();
+                  ActivationSummaryPage.completeSummaryStep();
+                  ActivationAgreementPage.completeAgreementStep();
+                }
+              });
             }
           });
+        }
+
+        function runDirectorVerificationFlow(email) {
+          cy.log(`Running Director verification flow for: ${email}`);
+          
+          YopmailPage.visitAndGetVerificationLink(email);
+          cy.get('@verificationLink').then((href) => {
+            cy.log(`Navigating to verification link: ${href}`);
+            cy.visit(href);
+          });
+          
+          // Landing page: "The link opens a page to tell them what they're about to do. There's a Continue button to click."
+          cy.contains('button', 'Continue', { timeout: 15000 }).should('be.visible').click();
+          
+          // BVN Page
+          BvnPage.completeBvnStep(registrationData.bvn);
+          
+          // BVN Verification Page
+          BvnVerificationPage.completeBvnVerification();
+          
+          // Bio Page 1
+          SignatoryBioPage1.completeInfoVerification(registrationData);
+          
+          // Bio Page 2
+          SignatoryBioPage2.completeSignatoryBio2(registrationData);
+          
+          // Create Profile Page
+          CreateProfilePage.completeProfileCreation(registrationData);
+          
+          // Success Screen
+          cy.contains('Success!', { timeout: 15000 }).should('be.visible');
+          cy.contains('Your account information will be reviewed').should('be.visible');
+          cy.contains('button', 'Close').should('be.visible').click();
         }
       }
     }

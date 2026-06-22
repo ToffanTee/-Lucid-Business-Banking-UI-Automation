@@ -20,6 +20,10 @@ class ActivationDirectorsPage {
       return cy.contains('button', 'Continue')
     },
 
+    saveAndContinueLaterLink() {
+      return cy.contains('Save and continue later')
+    },
+
     // --- Add Director Form Elements ---
     addDirectorHeader() {
       return cy.contains('Add new director')
@@ -143,6 +147,13 @@ class ActivationDirectorsPage {
     Logger.info('Continue button clicked successfully')
   }
 
+  clickSaveAndContinueLater() {
+    Logger.step('Clicking Save and continue later link on Directors landing page')
+    cy.wait(1000)
+    this.elements.saveAndContinueLaterLink().should('be.visible').click({ force: true })
+    Logger.info('Save and continue later link clicked successfully')
+  }
+
   clickAddDirector() {
     Logger.step('Clicking add director link')
     cy.wait(1000)
@@ -158,11 +169,44 @@ class ActivationDirectorsPage {
   }
 
   clickEditOnFirstMissingInfoDirector() {
-    Logger.step('Clicking edit on first director with Missing Info')
-    cy.contains('Missing Info').first().should('be.visible').then(($el) => {
+    Logger.step('Clicking edit on first director with Phone number: N/A')
+    cy.contains('Phone number: N/A').first().should('be.visible').then(($el) => {
       this._clickEditOnDirectorCard($el)
     })
     Logger.info('Edit icon clicked on director with Missing Info')
+  }
+
+  getUnverifiedDirectorEmails() {
+    Logger.step('Extracting emails for all unverified directors')
+    return cy.get('body').then($body => {
+      const emails = []
+      // Find all cards that have 'Missing Info' or 'Documents Pending'
+      const unverifiedCards = $body.find('div:contains("Missing Info"), div:contains("Documents Pending")').filter(function() {
+        return Cypress.$(this).text().includes('@yopmail.com')
+      })
+      
+      // Extract emails exactly as they appear on the card using regex
+      unverifiedCards.each((_, card) => {
+        // Use innerText to preserve visual spaces/newlines, otherwise .text() mashes "JANE DOE" and "dir_1636" together!
+        const text = Cypress.$(card)[0].innerText || Cypress.$(card).text()
+        const match = text.match(/([a-zA-Z0-9._-]+@yopmail\.com)/)
+        if (match && !emails.includes(match[1])) {
+          emails.push(match[1])
+        }
+      })
+      
+      // If we couldn't narrow it down well, just scan the whole body as a fallback
+      if (emails.length === 0) {
+        const text = $body[0].innerText || $body.text()
+        const matches = text.match(/[a-zA-Z0-9._-]+@yopmail\.com/g) || []
+        matches.forEach(m => {
+          if (!emails.includes(m)) emails.push(m)
+        })
+      }
+      
+      Logger.info(`Found unverified emails: ${emails.join(', ')}`)
+      return cy.wrap(emails)
+    })
   }
 
   clickEditOnFirstPendingDirector() {

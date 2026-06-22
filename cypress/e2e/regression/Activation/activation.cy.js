@@ -22,6 +22,10 @@ import ActivationUploadDocumentsPage from '../../../pages/activation/ActivationU
 import ActivationSummaryPage from '../../../pages/activation/ActivationSummaryPage';
 import ActivationAgreementPage from '../../../pages/activation/ActivationAgreementPage';
 
+const ACTIVATION_USERNAME_KEY = 'ACTIVATION_REP_USERNAME';
+const ACTIVATION_PASSWORD_KEY = 'ACTIVATION_REP_PASSWORD';
+const ACTIVATION_FIXTURE_FILE = 'activation-rep.json';
+
 describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () => {
 
   let registrationData;
@@ -33,25 +37,24 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
 
   it('Should complete signup (if needed), login, and verify first steps of account activation', () => {
     
-    // Check if new user info is already saved from a previous run and matches what is in .env
-    cy.task('readNewUserEnvCredentials').then((envUser) => {
-      cy.task('readNewUserCredentials').then((existingNewUser) => {
-        const hasEnvCreds = envUser && envUser.username && envUser.password;
-        const hasFixtureCreds = existingNewUser && existingNewUser.username && existingNewUser.password;
-
-        if (hasEnvCreds && hasFixtureCreds && existingNewUser.username === envUser.username) {
-          cy.log('Found matching existing new user credentials. Skipping signup...');
-          registrationData = existingNewUser;
-          runLoginAndActivationFlow();
-        } else {
-          cy.log('No matching existing credentials found (or they were cleared from .env). Running full signup...');
-          // Clear the fixture/cache to keep it clean
-          cy.task('saveNewUserCredentials', {}).then(() => {
-            runFullSignupFlow();
+    cy.task('readActivationCredentials', { usernameKey: ACTIVATION_USERNAME_KEY, passwordKey: ACTIVATION_PASSWORD_KEY })
+      .then(({ username, password }) => {
+        if (username && password) {
+          cy.log('Found saved activation credentials — loading registration data from fixture...');
+          cy.task('readActivationFixture', { fixtureFile: ACTIVATION_FIXTURE_FILE }).then((savedData) => {
+            if (savedData && savedData.username === username) {
+              registrationData = savedData;
+              runLoginAndActivationFlow();
+            } else {
+              cy.log('Fixture missing or mismatched — running full signup...');
+              runFullSignupFlow();
+            }
           });
+        } else {
+          cy.log('No saved credentials found — running full signup...');
+          runFullSignupFlow();
         }
       });
-    });
 
     function runFullSignupFlow() {
       // Phase 1: Complete User Signup
@@ -67,8 +70,12 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
       CreateProfilePage.completeProfileCreation(registrationData);
       CreateProfilePage.verifyAccountCreated();
 
-      // Save the credentials (also writes to .env)
-      cy.task('saveNewUserCredentials', registrationData).then(() => {
+      cy.task('saveActivationCredentials', {
+        usernameKey: ACTIVATION_USERNAME_KEY,
+        passwordKey: ACTIVATION_PASSWORD_KEY,
+        fixtureFile: ACTIVATION_FIXTURE_FILE,
+        data: registrationData
+      }).then(() => {
         runLoginAndActivationFlow();
       });
     }
@@ -83,19 +90,11 @@ describe('Lucid Business Banking - Account Activation Flow (Company Rep)', () =>
       // ==========================================
       // Phase 3: Register Device (First login requirement)
       // ==========================================
-      // Use handleDeviceRegistrationIfNeeded so that if it is already registered (on a rerun), it skips gracefully
-      DeviceRegistrationPage.handleDeviceRegistrationIfNeeded();
-
-      // Wait for the URL to change away from the device registration page if it was loaded
-      cy.url().should('not.include', '/auth/device');
-
-      // If we got redirected back to login page (post device registration), log in again
-      cy.url().then((url) => {
-        if (url.includes('/login')) {
-          cy.log('Redirected to login after device registration. Logging in again...');
-          LoginPage.login(registrationData.username, registrationData.password);
-        }
+      DeviceRegistrationPage.handleDeviceRegistrationIfNeeded('add', {
+        username: registrationData.username,
+        password: registrationData.password
       });
+      cy.url().should('not.include', '/auth/device');
 
       // ==========================================
       // Phase 4: Account Activation Flow

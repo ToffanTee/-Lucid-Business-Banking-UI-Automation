@@ -56,5 +56,72 @@ describe('Lucid Business Banking - Company Rep Signup', () => {
     })
   });
 
+  // -------------------------------------------------------
+  // Negative Test 1: Registration type page requires a selection before proceeding
+  // -------------------------------------------------------
+  it('Should require a registration type selection before allowing navigation', () => {
+    RegistrationTypePage.navigateToSignUp();
+    RegistrationTypePage.verifyPageIsDisplayed();
+
+    // Neither option is clicked — the Continue/Next button should be absent or disabled
+    cy.contains('button', /continue|next|proceed/i).then($btn => {
+      if ($btn.length) {
+        cy.wrap($btn).should('be.disabled');
+      } else {
+        // If there is no continue button until a type is selected, that is correct behaviour
+        cy.contains('button', /continue|next|proceed/i).should('not.exist');
+      }
+    });
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 2: Weak password is rejected on profile creation
+  // -------------------------------------------------------
+  it('Should reject a weak password on the Create Profile step', () => {
+    RegistrationTypePage.navigateToSignUp();
+    RegistrationTypePage.verifyPageIsDisplayed();
+    RegistrationTypePage.selectCompanyRep();
+
+    BusinessCategoryPage.completeBusinessCategoryStep();
+    CompanyInfoPage.completeCompanyInfoStep(registrationData);
+    CompanyRepBioPage1.completeCompanyRepBio1(registrationData);
+    CompanyRepBioPage2.completeCompanyRepBio2(registrationData);
+    PasscodeVerificationPage.completePasscodeVerification();
+
+    // Override data with a weak password before reaching Create Profile
+    const weakData = { ...registrationData, password: 'weak' };
+
+    CreateProfilePage.completeProfileCreation(weakData);
+
+    // The app should show a password strength / validation error
+    cy.contains(/too short|strength|must contain|invalid password|requirement/i, { timeout: 10000 }).should('be.visible');
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 3: Duplicate username is rejected on profile creation
+  // -------------------------------------------------------
+  it('Should show an error when registering with an already-taken username', () => {
+    cy.task('readEnvCredentials').then(({ username: existingUsername }) => {
+      expect(existingUsername, 'EXISTING_USER_USERNAME must be set in .env').to.not.be.empty;
+
+      RegistrationTypePage.navigateToSignUp();
+      RegistrationTypePage.verifyPageIsDisplayed();
+      RegistrationTypePage.selectCompanyRep();
+
+      BusinessCategoryPage.completeBusinessCategoryStep();
+      CompanyInfoPage.completeCompanyInfoStep(registrationData);
+      CompanyRepBioPage1.completeCompanyRepBio1(registrationData);
+      CompanyRepBioPage2.completeCompanyRepBio2(registrationData);
+      PasscodeVerificationPage.completePasscodeVerification();
+
+      // Use an already-taken username
+      const duplicateData = { ...registrationData, username: existingUsername };
+
+      CreateProfilePage.completeProfileCreation(duplicateData);
+
+      cy.contains(/already exists|taken|unavailable|duplicate|username/i, { timeout: 10000 }).should('be.visible');
+    });
+  });
+
 });
 

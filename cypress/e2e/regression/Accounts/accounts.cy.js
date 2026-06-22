@@ -207,4 +207,79 @@ describe('Lucid Business Banking - Accounts Module', () => {
     AccountsPage.verifyPageLoaded();
   });
 
+  // -------------------------------------------------------
+  // Negative Test 1: Search with no matching term shows empty / no results
+  // -------------------------------------------------------
+  it('Should show no matching results when searching with a term that does not exist', () => {
+    AccountsPage.waitForAccountCards();
+    AccountsPage.navigateToAccountDetails('1200005265');
+
+    TransactionsPage.searchByNarrationNoWait('zzz_no_match_xyz_00000_unique');
+
+    // Either the empty-state message or a "no results" indicator should be visible
+    cy.contains(/no transaction|no result|not found|0 result/i, { timeout: 10000 }).should('be.visible');
+
+    TransactionsPage.clearSearch();
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 2: Invalid date range (end date before start date)
+  // -------------------------------------------------------
+  it('Should show an error or no results when end date is before start date in the filter', () => {
+    AccountsPage.waitForAccountCards();
+    AccountsPage.navigateToAccountDetails('1200005265');
+
+    TransactionsPage.setupNoReloadAssertion();
+    TransactionsPage.clickFilterButton();
+
+    // Apply a date range where end is before start — an invalid range
+    TransactionsPage.applyDateRangeFilter('06/10/2026', '01/01/2026');
+
+    // The page should either show a validation error or show empty state
+    cy.contains(/invalid|error|no transaction|no result/i, { timeout: 10000 }).should('be.visible');
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 3: Balance visibility toggle masks amounts
+  // -------------------------------------------------------
+  it('Should mask balance values when the visibility toggle is clicked', () => {
+    AccountsPage.waitForAccountCards();
+    AccountsPage.navigateToAccountDetails('1200005265');
+
+    // Confirm balance is visible before toggling
+    AccountsPage.elements.availableBalanceLabel().should('be.visible');
+
+    // Toggle to hide
+    AccountsPage.toggleBalanceVisibility();
+
+    // Balance figures should now be hidden (shown as asterisks or a masked value)
+    cy.get('body').then($body => {
+      const bodyText = $body.text();
+      const isMasked = /\*+|•{3,}/.test(bodyText) || !$body.find('[data-balance], .balance-amount').is(':visible');
+      expect(isMasked, 'Balance values should be masked after toggle').to.be.true;
+    });
+
+    // Toggle back to restore visibility
+    AccountsPage.toggleBalanceVisibility();
+    AccountsPage.elements.availableBalanceLabel().should('be.visible');
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 4: Reset filter restores default state
+  // -------------------------------------------------------
+  it('Should reset all filters to default when the Reset button is clicked', () => {
+    AccountsPage.waitForAccountCards();
+    AccountsPage.navigateToAccountDetails('1200005265');
+
+    // Open filter, apply a preset, then reset
+    TransactionsPage.clickFilterButton();
+    TransactionsPage.expandDateOptionAccordion();
+    TransactionsPage.selectDateOption('This week');
+    TransactionsPage.clickReset();
+
+    // After reset the panel stays open with the dropdown cleared back to "Select Option"
+    TransactionsPage.elements.applySearchButton().should('be.visible');
+    cy.contains('Select Option').should('be.visible');
+  });
+
 });

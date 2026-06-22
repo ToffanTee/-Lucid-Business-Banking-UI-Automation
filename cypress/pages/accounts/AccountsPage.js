@@ -47,7 +47,7 @@ class AccountsPage {
      * Eye/visibility toggle icon to show or hide the balance amounts.
      */
     eyeToggle() {
-      return cy.get('.mat-icon').filter(':visible').contains(/visibility|eye/i)
+      return cy.get('.toggle-account > .mat-mdc-button-touch-target')
     },
 
     sendMoneyButton() {

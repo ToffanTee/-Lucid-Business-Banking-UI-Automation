@@ -147,8 +147,9 @@ module.exports = defineConfig({
 
         /**
          * Reads credentials directly from the .env file on disk.
-         * Use this instead of Cypress.env() when the password may have
-         * been changed by a prior spec (e.g. forgot-password flow).
+         * Calls dotenv.config({ override: true }) on every invocation so that
+         * any password change written by a prior spec (e.g. forgot-password flow)
+         * is always reflected — process.env is never stale.
          */
         readEnvCredentials() {
           const envPath = path.resolve('.env');
@@ -157,15 +158,14 @@ module.exports = defineConfig({
             return { username: '', password: '', transactionPin: '' };
           }
 
-          const content = fs.readFileSync(envPath, 'utf-8');
-          const usernameMatch = content.match(/^EXISTING_USER_USERNAME=(.*)$/m);
-          const passwordMatch = content.match(/^EXISTING_USER_PASSWORD=(.*)$/m);
-          const pinMatch = content.match(/^TRANSACTION_PIN=(.*)$/m);
+          // Force-reload .env so process.env always has the latest values,
+          // even if the password was rotated by an earlier spec in the same run.
+          require('dotenv').config({ path: envPath, override: true });
 
           return {
-            username: usernameMatch ? usernameMatch[1].trim() : '',
-            password: passwordMatch ? passwordMatch[1].trim() : '',
-            transactionPin: pinMatch ? pinMatch[1].trim() : ''
+            username: process.env.EXISTING_USER_USERNAME?.trim() || '',
+            password: process.env.EXISTING_USER_PASSWORD?.trim() || '',
+            transactionPin: process.env.TRANSACTION_PIN?.trim() || ''
           };
         },
 
@@ -189,6 +189,68 @@ module.exports = defineConfig({
             username: usernameMatch ? usernameMatch[1].trim() : '',
             password: passwordMatch ? passwordMatch[1].trim() : ''
           };
+        },
+
+        readActivationCredentials({ usernameKey, passwordKey }) {
+          const envPath = path.resolve('.env');
+          if (!fs.existsSync(envPath)) {
+            return { username: '', password: '' };
+          }
+          require('dotenv').config({ path: envPath, override: true });
+          return {
+            username: process.env[usernameKey]?.trim() || '',
+            password: process.env[passwordKey]?.trim() || ''
+          };
+        },
+
+        saveActivationCredentials({ usernameKey, passwordKey, fixtureFile, data }) {
+          const envPath = path.resolve('.env');
+          const username = data?.username || '';
+          const password = data?.password || '';
+
+          // Guard: never save existing-user credentials as activation credentials
+          const existingUsername = (process.env.EXISTING_USER_USERNAME || '').trim().toLowerCase();
+          if (existingUsername && username.toLowerCase() === existingUsername) {
+            console.error(`saveActivationCredentials: refused to save existing user "${username}" as ${usernameKey}`);
+            return null;
+          }
+
+          if (fs.existsSync(envPath)) {
+            let content = fs.readFileSync(envPath, 'utf-8');
+
+            const usernameRegex = new RegExp(`^${usernameKey}=.*$`, 'm');
+            content = usernameRegex.test(content)
+              ? content.replace(usernameRegex, `${usernameKey}=${username}`)
+              : content + `\n${usernameKey}=${username}`;
+
+            const passwordRegex = new RegExp(`^${passwordKey}=.*$`, 'm');
+            content = passwordRegex.test(content)
+              ? content.replace(passwordRegex, `${passwordKey}=${password}`)
+              : content + `\n${passwordKey}=${password}`;
+
+            fs.writeFileSync(envPath, content, 'utf-8');
+            process.env[usernameKey] = username;
+            process.env[passwordKey] = password;
+            console.log(`${usernameKey} and ${passwordKey} saved to .env`);
+          } else {
+            console.error('.env file not found — cannot save activation credentials');
+          }
+
+          const fixturePath = path.resolve(`cypress/fixtures/${fixtureFile}`);
+          fs.writeFileSync(fixturePath, JSON.stringify({ ...data, savedAt: new Date().toISOString() }, null, 2));
+          console.log(`Activation fixture saved to ${fixturePath}`);
+
+          return data;
+        },
+
+        readActivationFixture({ fixtureFile }) {
+          const fixturePath = path.resolve(`cypress/fixtures/${fixtureFile}`);
+          if (!fs.existsSync(fixturePath)) return null;
+          try {
+            return JSON.parse(fs.readFileSync(fixturePath, 'utf-8'));
+          } catch (e) {
+            return null;
+          }
         }
       });
 
@@ -215,6 +277,15 @@ module.exports = defineConfig({
         // New user credentials from .env (populated after registration)
         NEW_USER_USERNAME: process.env.NEW_USER_USERNAME || '',
         NEW_USER_PASSWORD: process.env.NEW_USER_PASSWORD || '',
+        // Per-spec activation credentials
+        ACTIVATION_REP_USERNAME: process.env.ACTIVATION_REP_USERNAME || '',
+        ACTIVATION_REP_PASSWORD: process.env.ACTIVATION_REP_PASSWORD || '',
+        ACTIVATION_SIG_USERNAME: process.env.ACTIVATION_SIG_USERNAME || '',
+        ACTIVATION_SIG_PASSWORD: process.env.ACTIVATION_SIG_PASSWORD || '',
+        ACTIVATION_SKIP_REP_USERNAME: process.env.ACTIVATION_SKIP_REP_USERNAME || '',
+        ACTIVATION_SKIP_REP_PASSWORD: process.env.ACTIVATION_SKIP_REP_PASSWORD || '',
+        ACTIVATION_SKIP_SIG_USERNAME: process.env.ACTIVATION_SKIP_SIG_USERNAME || '',
+        ACTIVATION_SKIP_SIG_PASSWORD: process.env.ACTIVATION_SKIP_SIG_PASSWORD || '',
         // Activation NIN and signatory static data from .env
         NIN_FOR_ACTIVATION: process.env.NIN_FOR_ACTIVATION || '',
         SIGNATORY_FIRST_NAME: process.env.SIGNATORY_FIRST_NAME || 'Bunch',

@@ -53,14 +53,46 @@ describe('Lucid Business Banking - Login', () => {
     });
   });
 
-  // // -------------------------------------------------------
-  // // Test: Invalid login credentials
-  // // -------------------------------------------------------
-  // it('Should handle invalid login credentials', function() {
-  //   LoginPage.login('invaliduser', 'InvalidPass1!');
+  // -------------------------------------------------------
+  // Negative Test 1: Invalid credentials
+  // -------------------------------------------------------
+  it('Should show an error and remain on login page when credentials are invalid', function () {
+    LoginPage.login('non_existent_user_abc_99999', 'WrongPassword@99!');
 
-  //   // The page URL should still contain lucid-corporate since login failed
-  //   cy.url().should('include', 'lucid-corporate');
-  // });
+    cy.url().should('include', '/login');
+    cy.contains(/invalid|incorrect|not found|failed|wrong/i, { timeout: 10000 }).should('be.visible');
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 2: Empty username
+  // -------------------------------------------------------
+  it('Should prevent login when username field is empty', function () {
+    LoginPage.fillPassword('SomePass@123');
+
+    LoginPage.elements.loginButton().then($btn => {
+      if (Cypress.$($btn).is(':disabled')) {
+        cy.wrap($btn).should('be.disabled');
+      } else {
+        cy.wrap($btn).click();
+        cy.url().should('include', '/login');
+      }
+    });
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 3: Empty password
+  // -------------------------------------------------------
+  it('Should prevent login when password field is empty', function () {
+    LoginPage.fillUsername('someusername');
+
+    LoginPage.elements.loginButton().then($btn => {
+      if (Cypress.$($btn).is(':disabled')) {
+        cy.wrap($btn).should('be.disabled');
+      } else {
+        cy.wrap($btn).click();
+        cy.url().should('include', '/login');
+      }
+    });
+  });
 
 });

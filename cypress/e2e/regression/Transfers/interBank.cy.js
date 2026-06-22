@@ -51,4 +51,57 @@ describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
     InterBankTransferPage.elements.destinationBankDropdown().should('not.exist');
   });
 
+  // -------------------------------------------------------
+  // Negative Test 1: Cannot proceed without selecting a destination bank
+  // -------------------------------------------------------
+  it('Should not allow proceeding when no destination bank is selected', () => {
+    TransfersPage.clickSendMoney();
+    InterBankTransferPage.switchToInterBank();
+
+    // Fill account and amount but leave destination bank unselected
+    InterBankTransferPage.elements.destinationAccountInput().clear().type('0123456789');
+    InterBankTransferPage.fillAmount('500');
+
+    InterBankTransferPage.elements.continueButton().then($btn => {
+      if (Cypress.$($btn).is(':disabled')) {
+        cy.wrap($btn).should('be.disabled');
+      } else {
+        cy.wrap($btn).click({ force: true });
+        cy.contains(/bank|required|select|destination/i, { timeout: 10000 }).should('be.visible');
+      }
+    });
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 2: Cannot proceed without entering an account number
+  // -------------------------------------------------------
+  it('Should not allow proceeding when the destination account number is empty', () => {
+    TransfersPage.clickSendMoney();
+    InterBankTransferPage.switchToInterBank();
+
+    // Select a bank but leave account number empty
+    InterBankTransferPage.selectDestinationBank('Access Bank');
+    InterBankTransferPage.fillAmount('500');
+
+    InterBankTransferPage.elements.continueButton().then($btn => {
+      if (Cypress.$($btn).is(':disabled')) {
+        cy.wrap($btn).should('be.disabled');
+      } else {
+        cy.wrap($btn).click({ force: true });
+        cy.contains(/account|required|destination/i, { timeout: 10000 }).should('be.visible');
+      }
+    });
+  });
+
+  // -------------------------------------------------------
+  // Negative Test 3: Destination Bank dropdown is hidden in Intra-bank mode
+  // -------------------------------------------------------
+  it('Should not show the Destination Bank dropdown when in Intra-bank mode', () => {
+    TransfersPage.clickSendMoney();
+
+    // Default state is intra-bank; bank dropdown must not be present
+    IntraBankTransferPage.switchToIntraBank();
+    cy.contains('Destination Bank').should('not.exist');
+  });
+
 });

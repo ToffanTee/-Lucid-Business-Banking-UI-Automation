@@ -20,6 +20,10 @@ class ActivationSignatoriesPage {
       return cy.contains('button', 'Continue')
     },
 
+    saveAndContinueLaterLink() {
+      return cy.contains('Save and continue later')
+    },
+
     // --- Add Signatory Form Elements ---
     addSignatoryHeader() {
       return cy.contains('Add new signatory')
@@ -158,6 +162,13 @@ class ActivationSignatoriesPage {
     Logger.info('Continue button clicked successfully')
   }
 
+  clickSaveAndContinueLater() {
+    Logger.step('Clicking Save and continue later link on Signatories landing page')
+    cy.wait(1000)
+    this.elements.saveAndContinueLaterLink().should('be.visible').click({ force: true })
+    Logger.info('Save and continue later link clicked successfully')
+  }
+
   /**
    * Flexible add signatory — handles both "Add a new signatory"
    * (when no signatories exist) and "Add another signatory"
@@ -183,8 +194,8 @@ class ActivationSignatoriesPage {
    * to the card container, then locates the edit icon within it.
    */
   clickEditOnFirstMissingInfoSignatory() {
-    Logger.step('Clicking edit on first signatory with Missing Info')
-    cy.contains('Missing Info').first().should('be.visible').then(($el) => {
+    Logger.step('Clicking edit on first signatory with Phone number: N/A')
+    cy.contains('Phone number: N/A').first().should('be.visible').then(($el) => {
       this._clickEditOnSignatoryCard($el)
     })
     Logger.info('Edit icon clicked on signatory with Missing Info')
