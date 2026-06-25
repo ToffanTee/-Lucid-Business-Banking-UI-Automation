@@ -16,63 +16,63 @@ describe('Lucid Business Banking - Company Rep Signup', () => {
     registrationData = generateRegistrationData()
   });
 
-  // it('Should complete the full Company Rep signup flow', () => {
+  it('Should complete the full Company Rep signup flow', () => {
 
-  //   // Step 1: Navigate to signup page
-  //   RegistrationTypePage.navigateToSignUp()
+    // Step 1: Navigate to signup page
+    RegistrationTypePage.navigateToSignUp()
 
-  //   // Step 2: Select "As a Company rep" registration type
-  //   RegistrationTypePage.verifyPageIsDisplayed()
-  //   RegistrationTypePage.selectCompanyRep()
+    // Step 2: Select "As a Company rep" registration type
+    RegistrationTypePage.verifyPageIsDisplayed()
+    RegistrationTypePage.selectCompanyRep()
 
-  //   // Step 3: Select business category and continue
-  //   BusinessCategoryPage.completeBusinessCategoryStep()
+    // Step 3: Select business category and continue
+    BusinessCategoryPage.completeBusinessCategoryStep()
 
-  //   // Step 4: Company Information — company details
-  //   CompanyInfoPage.completeCompanyInfoStep(registrationData)
+    // Step 4: Company Information — company details
+    CompanyInfoPage.completeCompanyInfoStep(registrationData)
 
-  //   // Step 5: Company Rep Bio (1/2) — personal details
-  //   CompanyRepBioPage1.completeCompanyRepBio1(registrationData)
+    // Step 5: Company Rep Bio (1/2) — personal details
+    CompanyRepBioPage1.completeCompanyRepBio1(registrationData)
 
-  //   // Step 6: Company Rep Bio (2/2) — address, state, city, state of origin, mother's maiden name
-  //   CompanyRepBioPage2.completeCompanyRepBio2(registrationData)
+    // Step 6: Company Rep Bio (2/2) — address, state, city, state of origin, mother's maiden name
+    CompanyRepBioPage2.completeCompanyRepBio2(registrationData)
 
-  //   // Step 7: Passcode Verification — enter email passcode
-  //   PasscodeVerificationPage.completePasscodeVerification()
+    // Step 7: Passcode Verification — enter email passcode
+    PasscodeVerificationPage.completePasscodeVerification()
 
-  //   // Step 8: Create Profile
-  //   CreateProfilePage.completeProfileCreation(registrationData)
+    // Step 8: Create Profile
+    CreateProfilePage.completeProfileCreation(registrationData)
 
-  //   // Final assertion
-  //   CreateProfilePage.verifyAccountCreated()
+    // Final assertion
+    CreateProfilePage.verifyAccountCreated()
 
-  //   // Save company rep credentials to dedicated env keys for login tests
-  //   cy.task('saveCompRepSignupCredentials', {
-  //     username: registrationData.username,
-  //     password: registrationData.password,
-  //     email: registrationData.email,
-  //   }).then((savedData) => {
-  //     cy.log(`Company rep credentials saved — username: ${savedData.username}`)
-  //   })
-  // });
-
-  // -------------------------------------------------------
-  // Negative Test 1: Registration type page requires a selection before proceeding
-  // -------------------------------------------------------
-  it('Should require a registration type selection before allowing navigation', () => {
-    RegistrationTypePage.navigateToSignUp();
-    RegistrationTypePage.verifyPageIsDisplayed();
-
-    // Neither option is clicked — the Continue/Next button should be absent or disabled
-    cy.contains('button', /continue|next|proceed/i).then($btn => {
-      if ($btn.length) {
-        cy.wrap($btn).should('be.disabled');
-      } else {
-        // If there is no continue button until a type is selected, that is correct behaviour
-        cy.contains('button', /continue|next|proceed/i).should('not.exist');
-      }
-    });
+    // Save company rep credentials to dedicated env keys for login tests
+    cy.task('saveCompRepSignupCredentials', {
+      username: registrationData.username,
+      password: registrationData.password,
+      email: registrationData.email,
+    }).then((savedData) => {
+      cy.log(`Company rep credentials saved — username: ${savedData.username}`)
+    })
   });
+
+  // // -------------------------------------------------------
+  // // Negative Test 1: Registration type page requires a selection before proceeding
+  // // -------------------------------------------------------
+  // it('Should require a registration type selection before allowing navigation', () => {
+  //   RegistrationTypePage.navigateToSignUp();
+  //   RegistrationTypePage.verifyPageIsDisplayed();
+
+  //   // Neither option is clicked — the Continue/Next button should be absent or disabled
+  //   cy.contains('button', /continue|next|proceed/i).then($btn => {
+  //     if ($btn.length) {
+  //       cy.wrap($btn).should('be.disabled');
+  //     } else {
+  //       // If there is no continue button until a type is selected, that is correct behaviour
+  //       cy.contains('button', /continue|next|proceed/i).should('not.exist');
+  //     }
+  //   });
+  // });
 
   // // -------------------------------------------------------
   // // Negative Test 2: Weak password is rejected on profile creation

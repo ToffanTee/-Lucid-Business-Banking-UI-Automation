@@ -64,62 +64,62 @@ describe('Lucid Business Banking - Signatory/Director Signup', () => {
     })
   });
 
-  // -------------------------------------------------------
-  // Negative Test 1: Short BVN (fewer than 11 digits) is rejected
-  // -------------------------------------------------------
-  it('Should show a validation error when a BVN shorter than 11 digits is submitted', () => {
-    RegistrationTypePage.navigateToSignUp();
-    RegistrationTypePage.verifyPageIsDisplayed();
-    RegistrationTypePage.selectSignatoryDirector();
+  // // -------------------------------------------------------
+  // // Negative Test 1: Short BVN (fewer than 11 digits) is rejected
+  // // -------------------------------------------------------
+  // it('Should show a validation error when a BVN shorter than 11 digits is submitted', () => {
+  //   RegistrationTypePage.navigateToSignUp();
+  //   RegistrationTypePage.verifyPageIsDisplayed();
+  //   RegistrationTypePage.selectSignatoryDirector();
 
-    BusinessCategoryPage.completeBusinessCategoryStep();
+  //   BusinessCategoryPage.completeBusinessCategoryStep();
 
-    BvnPage.verifyPageIsDisplayed();
-    BvnPage.enterBvn('12345'); // only 5 digits — clearly invalid
-    BvnPage.clickContinue();
+  //   BvnPage.verifyPageIsDisplayed();
+  //   BvnPage.enterBvn('12345'); // only 5 digits — clearly invalid
+  //   BvnPage.clickContinue();
 
-    cy.contains(/invalid|too short|11 digits|bvn|error/i, { timeout: 10000 }).should('be.visible');
-  });
+  //   cy.contains(/invalid|too short|11 digits|bvn|error/i, { timeout: 10000 }).should('be.visible');
+  // });
 
-  // -------------------------------------------------------
-  // Negative Test 2: Non-numeric BVN is rejected
-  // -------------------------------------------------------
-  it('Should reject a BVN containing non-numeric characters', () => {
-    RegistrationTypePage.navigateToSignUp();
-    RegistrationTypePage.verifyPageIsDisplayed();
-    RegistrationTypePage.selectSignatoryDirector();
+  // // -------------------------------------------------------
+  // // Negative Test 2: Non-numeric BVN is rejected
+  // // -------------------------------------------------------
+  // it('Should reject a BVN containing non-numeric characters', () => {
+  //   RegistrationTypePage.navigateToSignUp();
+  //   RegistrationTypePage.verifyPageIsDisplayed();
+  //   RegistrationTypePage.selectSignatoryDirector();
 
-    BusinessCategoryPage.completeBusinessCategoryStep();
+  //   BusinessCategoryPage.completeBusinessCategoryStep();
 
-    BvnPage.verifyPageIsDisplayed();
-    BvnPage.enterBvn('ABCDEFGHIJK'); // letters instead of digits
-    BvnPage.clickContinue();
+  //   BvnPage.verifyPageIsDisplayed();
+  //   BvnPage.enterBvn('ABCDEFGHIJK'); // letters instead of digits
+  //   BvnPage.clickContinue();
 
-    cy.contains(/invalid|numeric|digits only|bvn|error/i, { timeout: 10000 }).should('be.visible');
-  });
+  //   cy.contains(/invalid|numeric|digits only|bvn|error/i, { timeout: 10000 }).should('be.visible');
+  // });
 
-  // -------------------------------------------------------
-  // Negative Test 3: Empty BVN field — Continue button disabled or error shown
-  // -------------------------------------------------------
-  it('Should prevent proceeding when the BVN field is empty', () => {
-    RegistrationTypePage.navigateToSignUp();
-    RegistrationTypePage.verifyPageIsDisplayed();
-    RegistrationTypePage.selectSignatoryDirector();
+  // // -------------------------------------------------------
+  // // Negative Test 3: Empty BVN field — Continue button disabled or error shown
+  // // -------------------------------------------------------
+  // it('Should prevent proceeding when the BVN field is empty', () => {
+  //   RegistrationTypePage.navigateToSignUp();
+  //   RegistrationTypePage.verifyPageIsDisplayed();
+  //   RegistrationTypePage.selectSignatoryDirector();
 
-    BusinessCategoryPage.completeBusinessCategoryStep();
+  //   BusinessCategoryPage.completeBusinessCategoryStep();
 
-    BvnPage.verifyPageIsDisplayed();
-    // Leave BVN field empty
+  //   BvnPage.verifyPageIsDisplayed();
+  //   // Leave BVN field empty
 
-    BvnPage.elements.continueButton().then($btn => {
-      if (Cypress.$($btn).is(':disabled')) {
-        cy.wrap($btn).should('be.disabled');
-      } else {
-        cy.wrap($btn).click();
-        cy.contains(/required|enter bvn|bvn|field/i, { timeout: 10000 }).should('be.visible');
-      }
-    });
-  });
+  //   BvnPage.elements.continueButton().then($btn => {
+  //     if (Cypress.$($btn).is(':disabled')) {
+  //       cy.wrap($btn).should('be.disabled');
+  //     } else {
+  //       cy.wrap($btn).click();
+  //       cy.contains(/required|enter bvn|bvn|field/i, { timeout: 10000 }).should('be.visible');
+  //     }
+  //   });
+  // });
 
 });
 

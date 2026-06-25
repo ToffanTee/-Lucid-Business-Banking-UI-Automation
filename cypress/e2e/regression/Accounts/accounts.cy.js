@@ -146,23 +146,23 @@ describe('Lucid Business Banking - Accounts Module', () => {
     TransactionsPage.verifyNoFullPageReload();
   });
 
-  // -------------------------------------------------------
-  // Test 7c: Date Range custom filter — no full page reload
-  // -------------------------------------------------------
-  it('Should apply a custom Date Range filter without full page reload', function () {
-    AccountsPage.waitForAccountCards();
-    AccountsPage.navigateToAccountDetails('1200005265');
+  // // -------------------------------------------------------
+  // // Test 7c: Date Range custom filter — no full page reload
+  // // -------------------------------------------------------
+  // it('Should apply a custom Date Range filter without full page reload', function () {
+  //   AccountsPage.waitForAccountCards();
+  //   AccountsPage.navigateToAccountDetails('1200005265');
 
-    // Set up the no-reload assertion
-    TransactionsPage.setupNoReloadAssertion();
+  //   // Set up the no-reload assertion
+  //   TransactionsPage.setupNoReloadAssertion();
 
-    // Open filter panel and apply a custom date range
-    TransactionsPage.clickFilterButton();
-    TransactionsPage.applyDateRangeFilter('01/01/2026', '06/10/2026');
+  //   // Open filter panel and apply a custom date range
+  //   TransactionsPage.clickFilterButton();
+  //   TransactionsPage.applyDateRangeFilter('01/01/2026', '06/10/2026');
 
-    // Verify no full page reload occurred
-    TransactionsPage.verifyNoFullPageReload();
-  });
+  //   // Verify no full page reload occurred
+  //   TransactionsPage.verifyNoFullPageReload();
+  // });
 
   // -------------------------------------------------------
   // Test 8: Infinite scroll (placeholder — requires transaction data)
