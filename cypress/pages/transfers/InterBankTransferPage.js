@@ -71,6 +71,26 @@ class InterBankTransferPage {
         .find('input')
     },
 
+    startDateInput() {
+      return cy.get('input[placeholder="MM/DD/YYYY"]').filter(':visible').first()
+    },
+
+    endDateInput() {
+      return cy.get('input[placeholder="MM/DD/YYYY"]').filter(':visible').eq(1)
+    },
+
+    frequencyDropdown() {
+      return cy.contains('Frequency')
+        .parents()
+        .filter((idx, el) => Cypress.$(el).find('.justify-between, mat-select, select, .mat-mdc-select').length > 0)
+        .first()
+        .find('.justify-between, mat-select, select, .mat-mdc-select')
+    },
+
+    frequencyRequiredError() {
+      return cy.contains('Field is required')
+    },
+
     continueButton() {
       return cy.get('[class*="ng-tns-c3740896876-"] > .bg-primary').filter(':visible')
     },
@@ -183,6 +203,40 @@ class InterBankTransferPage {
     Logger.step(`Selecting schedule option: ${option}`)
     cy.contains('mat-radio-button, label, .radio', option).click()
     Logger.info(`Schedule option set to: ${option}`)
+  }
+
+  /**
+   * Fill the start date for Later or Repeating schedule.
+   * @param {string} date — date string in MM/DD/YYYY format
+   */
+  fillStartDate(date) {
+    Logger.step(`Entering start date: ${date}`)
+    this.elements.startDateInput().clear().type(date)
+    Logger.info(`Start date set to ${date}`)
+  }
+
+  /**
+   * Fill the end date for Repeating schedule.
+   * @param {string} date — date string in MM/DD/YYYY format
+   */
+  fillEndDate(date) {
+    Logger.step(`Entering end date: ${date}`)
+    this.elements.endDateInput().clear().type(date)
+    Logger.info(`End date set to ${date}`)
+  }
+
+  /**
+   * Select the repeat frequency for a Repeating scheduled transfer.
+   * @param {string} frequency — e.g. 'Monthly', 'Weekly', 'Daily'
+   */
+  selectFrequency(frequency) {
+    Logger.step(`Selecting frequency: ${frequency}`)
+    this.elements.frequencyDropdown().click({ force: true })
+    cy.get('.cdk-overlay-container, [role="dialog"], .modal, .dialog')
+      .last()
+      .contains(new RegExp(`^\\s*${frequency}\\s*$`, 'i'))
+      .click({ force: true })
+    Logger.info(`Frequency set to ${frequency}`)
   }
 
   /**

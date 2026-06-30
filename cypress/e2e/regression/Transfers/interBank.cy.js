@@ -74,7 +74,7 @@ describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
         // Confirm transfer details and launch PIN prompt
         InterBankTransferPage.clickConfirmTransfer();
   
-        // Enter transaction PIN (123456)
+        // Enter transaction PIN
         InterBankTransferPage.enterTransactionPin(transactionPin);
   
         // Confirm after PIN (if applicable - clicking the Confirm button)
@@ -83,7 +83,7 @@ describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
         // Wait for OTP screen to load after PIN submission
         cy.wait(5000);
   
-        // Enter OTP (passcode is 654321 on staging)
+        // Enter OTP
         const passcode = Cypress.env('PASSCODE') || '654321';
         InterBankTransferPage.enterTransactionOtp(passcode);
   
@@ -94,6 +94,96 @@ describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
         InterBankTransferPage.verifyTransferSuccess();
       });
     });
+
+  // -------------------------------------------------------
+  // Test 4: Complete a Later scheduled Inter-bank transfer
+  // -------------------------------------------------------
+  it('Should complete a Later scheduled Inter-bank transfer', () => {
+    cy.task('readEnvCredentials').then(({ transactionPin }) => {
+      TransfersPage.clickSendMoney();
+      InterBankTransferPage.switchToInterBank();
+
+      InterBankTransferPage.fillDestinationAccount('3410987243');
+      cy.wait(2000);
+      InterBankTransferPage.selectDestinationBank('Sterling');
+      InterBankTransferPage.fillAmount('50');
+      InterBankTransferPage.selectSpendingCategory('TRANSPORT');
+      InterBankTransferPage.fillDescription('Automated later scheduled inter-bank test');
+      InterBankTransferPage.selectScheduleOption('Later');
+      InterBankTransferPage.fillStartDate('07/31/2026');
+
+      InterBankTransferPage.clickContinue();
+      InterBankTransferPage.clickConfirmTransfer();
+      InterBankTransferPage.enterTransactionPin(transactionPin);
+      InterBankTransferPage.clickConfirmTransfer();
+
+      cy.wait(5000);
+      const passcode = Cypress.env('PASSCODE') || '654321';
+      InterBankTransferPage.enterTransactionOtp(passcode);
+      InterBankTransferPage.clickConfirmTransfer();
+
+      InterBankTransferPage.verifyTransferSuccess();
+    });
+  });
+
+  // -------------------------------------------------------
+  // Test 5: Complete a Repeating scheduled Inter-bank transfer
+  // -------------------------------------------------------
+  it('Should complete a Repeating scheduled Inter-bank transfer', () => {
+    cy.task('readEnvCredentials').then(({ transactionPin }) => {
+      TransfersPage.clickSendMoney();
+      InterBankTransferPage.switchToInterBank();
+
+      InterBankTransferPage.fillDestinationAccount('3410987243');
+      cy.wait(2000);
+      InterBankTransferPage.selectDestinationBank('Sterling');
+      InterBankTransferPage.fillAmount('50');
+      InterBankTransferPage.selectSpendingCategory('TRANSPORT');
+      InterBankTransferPage.fillDescription('Automated repeating inter-bank test');
+      InterBankTransferPage.selectScheduleOption('Repeating');
+      InterBankTransferPage.fillStartDate('07/01/2026');
+      InterBankTransferPage.fillEndDate('12/31/2026');
+      InterBankTransferPage.selectFrequency('Monthly');
+
+      InterBankTransferPage.clickContinue();
+      InterBankTransferPage.clickConfirmTransfer();
+      InterBankTransferPage.enterTransactionPin(transactionPin);
+      InterBankTransferPage.clickConfirmTransfer();
+
+      cy.wait(5000);
+      const passcode = Cypress.env('PASSCODE') || '654321';
+      InterBankTransferPage.enterTransactionOtp(passcode);
+      InterBankTransferPage.clickConfirmTransfer();
+
+      InterBankTransferPage.verifyTransferSuccess();
+    });
+  });
+
+  // // -------------------------------------------------------
+  // // Negative Test: Repeating transfer without frequency shows required error
+  // // -------------------------------------------------------
+  // it('Should show a required field error when Repeating is selected without a frequency', () => {
+  //   TransfersPage.clickSendMoney();
+  //   InterBankTransferPage.switchToInterBank();
+
+  //   InterBankTransferPage.fillDestinationAccount('3410987243');
+  //   cy.wait(2000);
+  //   InterBankTransferPage.selectDestinationBank('Sterling');
+  //   InterBankTransferPage.fillAmount('50');
+  //   InterBankTransferPage.selectScheduleOption('Repeating');
+  //   InterBankTransferPage.fillStartDate('07/01/2026');
+  //   InterBankTransferPage.fillEndDate('12/31/2026');
+  //   // Intentionally skip frequency selection
+
+  //   InterBankTransferPage.elements.continueButton().then($btn => {
+  //     if (Cypress.$($btn).is(':disabled')) {
+  //       cy.wrap($btn).should('be.disabled');
+  //     } else {
+  //       cy.wrap($btn).click({ force: true });
+  //       InterBankTransferPage.elements.frequencyRequiredError().should('be.visible');
+  //     }
+  //   });
+  // });
 
   // -------------------------------------------------------
   // Negative Test 1: Cannot proceed without selecting a destination bank

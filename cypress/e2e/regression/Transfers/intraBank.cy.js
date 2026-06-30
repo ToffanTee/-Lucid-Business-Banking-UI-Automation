@@ -82,6 +82,90 @@ describe('Lucid Business Banking - Intra-bank Transfers Spec', () => {
   });
 
   // -------------------------------------------------------
+  // Test 3: Complete a Later scheduled Intra-bank transfer
+  // -------------------------------------------------------
+  it('Should complete a Later scheduled Intra-bank transfer', () => {
+    cy.task('readEnvCredentials').then(({ transactionPin }) => {
+      TransfersPage.clickSendMoney();
+      IntraBankTransferPage.switchToIntraBank();
+
+      IntraBankTransferPage.fillDestinationAccount('1100006568');
+      IntraBankTransferPage.fillAmount('50');
+      IntraBankTransferPage.selectSpendingCategory('TRANSPORT');
+      IntraBankTransferPage.fillDescription('Automated later scheduled intra-bank test');
+      IntraBankTransferPage.selectScheduleOption('Later');
+      IntraBankTransferPage.fillStartDate('07/31/2026');
+
+      IntraBankTransferPage.clickContinue();
+      IntraBankTransferPage.clickConfirmTransfer();
+      IntraBankTransferPage.enterTransactionPin(transactionPin);
+      IntraBankTransferPage.clickConfirmTransfer();
+
+      cy.wait(5000);
+      const passcode = Cypress.env('PASSCODE') || '654321';
+      IntraBankTransferPage.enterTransactionOtp(passcode);
+      IntraBankTransferPage.clickConfirmTransfer();
+
+      IntraBankTransferPage.verifyTransferSuccess();
+    });
+  });
+
+  // -------------------------------------------------------
+  // Test 4: Complete a Repeating scheduled Intra-bank transfer
+  // -------------------------------------------------------
+  it('Should complete a Repeating scheduled Intra-bank transfer', () => {
+    cy.task('readEnvCredentials').then(({ transactionPin }) => {
+      TransfersPage.clickSendMoney();
+      IntraBankTransferPage.switchToIntraBank();
+
+      IntraBankTransferPage.fillDestinationAccount('1100006568');
+      IntraBankTransferPage.fillAmount('50');
+      IntraBankTransferPage.selectSpendingCategory('TRANSPORT');
+      IntraBankTransferPage.fillDescription('Automated repeating intra-bank test');
+      IntraBankTransferPage.selectScheduleOption('Repeating');
+      IntraBankTransferPage.fillStartDate('07/01/2026');
+      IntraBankTransferPage.fillEndDate('12/31/2026');
+      IntraBankTransferPage.selectFrequency('Monthly');
+
+      IntraBankTransferPage.clickContinue();
+      IntraBankTransferPage.clickConfirmTransfer();
+      IntraBankTransferPage.enterTransactionPin(transactionPin);
+      IntraBankTransferPage.clickConfirmTransfer();
+
+      cy.wait(5000);
+      const passcode = Cypress.env('PASSCODE') || '654321';
+      IntraBankTransferPage.enterTransactionOtp(passcode);
+      IntraBankTransferPage.clickConfirmTransfer();
+
+      IntraBankTransferPage.verifyTransferSuccess();
+    });
+  });
+
+  // // -------------------------------------------------------
+  // // Negative Test: Repeating transfer without frequency shows required error
+  // // -------------------------------------------------------
+  // it('Should show a required field error when Repeating is selected without a frequency', () => {
+  //   TransfersPage.clickSendMoney();
+  //   IntraBankTransferPage.switchToIntraBank();
+
+  //   IntraBankTransferPage.fillDestinationAccount('1100006568');
+  //   IntraBankTransferPage.fillAmount('50');
+  //   IntraBankTransferPage.selectScheduleOption('Repeating');
+  //   IntraBankTransferPage.fillStartDate('07/01/2026');
+  //   IntraBankTransferPage.fillEndDate('12/31/2026');
+  //   // Intentionally skip frequency selection
+
+  //   IntraBankTransferPage.elements.continueButton().then($btn => {
+  //     if (Cypress.$($btn).is(':disabled')) {
+  //       cy.wrap($btn).should('be.disabled');
+  //     } else {
+  //       cy.wrap($btn).click({ force: true });
+  //       IntraBankTransferPage.elements.frequencyRequiredError().should('be.visible');
+  //     }
+  //   });
+  // });
+
+  // -------------------------------------------------------
   // Negative Test 1: Non-existent destination account number
   // -------------------------------------------------------
   it('Should show an account not found error for a non-existent destination account', () => {
