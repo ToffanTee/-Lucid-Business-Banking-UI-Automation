@@ -27,6 +27,13 @@ const generateBvn = () => {
 };
 
 /**
+ * Generates a random full name for generic inputs like 'Name on card'.
+ */
+export const generateRandomName = () => {
+  return faker.person.fullName();
+};
+
+/**
  * Generate test data for signatory/director registration.
  * Customize the fields below to match Lucid Business Banking forms.
  */

@@ -97,6 +97,18 @@ class AirtimeDataPage {
 
     successMessage() {
       return cy.contains('Request submitted successfully')
+    },
+
+    selectAccountModal() {
+      return cy.get('.cdk-overlay-container, [role="dialog"], .modal, .dialog').filter(':visible').last()
+    },
+
+    accountRadioOptions() {
+      return this.selectAccountModal().find('input[type="radio"]')
+    },
+
+    submitAccountButton() {
+      return this.selectAccountModal().contains('button', /Submit|Continue|Select|Confirm/i)
     }
   }
 
@@ -132,7 +144,11 @@ class AirtimeDataPage {
    */
   searchProvider(query) {
     Logger.step(`Searching for provider: ${query}`)
-    this.elements.providerSearchInput().clear().type(query)
+    this.elements.providerSearchInput()
+      .click()
+      .clear()
+      .type(`${query}{enter}`, { delay: 100 })
+      .blur()
     Logger.info(`Provider search entered: ${query}`)
   }
 
@@ -204,12 +220,13 @@ class AirtimeDataPage {
   }
 
   /**
-   * Select the Pay From account in the "Select account" modal that appears after Continue.
+   * Select the Pay From account in the "Select account" modal that appears.
    * Selects the first available account and clicks Submit.
    * @param {number} index — zero-based index of the account to select (defaults to 0)
    */
   selectPayFromAccount(index = 0) {
     Logger.step('Selecting Pay From account in modal')
+    cy.contains('Select account').click({ force: true })
     this.elements.selectAccountModal().should('be.visible')
     this.elements.accountRadioOptions().eq(index).click({ force: true })
     this.elements.submitAccountButton().click({ force: true })
@@ -277,7 +294,11 @@ class AirtimeDataPage {
    */
   searchHistory(phoneNumber) {
     Logger.step(`Searching history for phone: ${phoneNumber}`)
-    this.elements.historySearchInput().clear().type(phoneNumber)
+    this.elements.historySearchInput()
+      .click()
+      .clear()
+      .type(`${phoneNumber}{enter}`, { delay: 100 })
+      .blur()
     Logger.info(`History search entered: ${phoneNumber}`)
   }
 

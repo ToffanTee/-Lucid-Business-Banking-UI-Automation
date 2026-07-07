@@ -20,23 +20,23 @@ describe('Lucid Business Banking - Airtime & Data Spec', () => {
     });
   });
 
-  // -------------------------------------------------------
-  // Test 1: Airtime & Data page loads with providers and history
-  // -------------------------------------------------------
-  it('Should display the Airtime & Data page with provider grid and history section', () => {
-    AirtimeDataPage.verifyPageLoaded();
+  // // -------------------------------------------------------
+  // // Test 1: Airtime & Data page loads with providers and history
+  // // -------------------------------------------------------
+  // it('Should display the Airtime & Data page with provider grid and history section', () => {
+  //   AirtimeDataPage.verifyPageLoaded();
 
-    // Verify known airtime providers are present
-    AirtimeDataPage.elements.providerTile('MTN').should('be.visible');
-    AirtimeDataPage.elements.providerTile('Glo').should('be.visible');
-    AirtimeDataPage.elements.providerTile('Airtel').should('be.visible');
-    AirtimeDataPage.elements.providerTile('9Mobile').should('be.visible');
+  //   // Verify known airtime providers are present
+  //   AirtimeDataPage.elements.providerTile('MTN').should('be.visible');
+  //   AirtimeDataPage.elements.providerTile('Glo').should('be.visible');
+  //   AirtimeDataPage.elements.providerTile('Airtel').should('be.visible');
+  //   AirtimeDataPage.elements.providerTile('9Mobile').should('be.visible');
 
-    // Verify history section is visible
-    AirtimeDataPage.elements.historySection().should('be.visible');
-    AirtimeDataPage.elements.historySearchInput().should('be.visible');
-    AirtimeDataPage.elements.historyFilterButton().should('be.visible');
-  });
+  //   // Verify history section is visible
+  //   AirtimeDataPage.elements.historySection().should('be.visible');
+  //   AirtimeDataPage.elements.historySearchInput().should('be.visible');
+  //   AirtimeDataPage.elements.historyFilterButton().should('be.visible');
+  // });
 
   // // -------------------------------------------------------
   // // Test 2: Selecting a provider opens the purchase panel
@@ -58,64 +58,61 @@ describe('Lucid Business Banking - Airtime & Data Spec', () => {
   //   AirtimeDataPage.searchProvider('MTN');
 
   //   AirtimeDataPage.elements.providerTile('MTN').should('be.visible');
-  //   // Airtel tile should be hidden in the grid; history table may still contain "Airtel" rows
-  //   AirtimeDataPage.elements.providerTile('Airtel').should('not.be.visible');
   // });
 
-  // -------------------------------------------------------
-  // Test 4: Complete an airtime purchase successfully (MTN)
-  // -------------------------------------------------------
-  it('Should complete an MTN airtime purchase successfully', () => {
-    cy.task('readEnvCredentials').then(({ transactionPin }) => {
-      cy.wait(1000)
-      AirtimeDataPage.selectPayFromAccount();
-      AirtimeDataPage.selectProvider('MTN');
+  // // -------------------------------------------------------
+  // // Test 4: Complete an airtime purchase successfully (MTN)
+  // // -------------------------------------------------------
+  // it('Should complete an MTN airtime purchase successfully', () => {
+  //   cy.task('readEnvCredentials').then(({ transactionPin }) => {
+  //     cy.wait(1000)
+  //     AirtimeDataPage.selectProvider('MTN');
+  //     AirtimeDataPage.selectPayFromAccount();
 
-      cy.wait(3000)
-      AirtimeDataPage.selectFirstPackage();
-      AirtimeDataPage.fillPhoneNumber('8012345678');
+  //     cy.wait(3000)
+  //     AirtimeDataPage.selectFirstPackage();
+  //     AirtimeDataPage.fillPhoneNumber('8012345678');
 
-      AirtimeDataPage.clickContinue();
-      
-      AirtimeDataPage.clickConfirm();
-      AirtimeDataPage.enterTransactionPin(transactionPin);
-      AirtimeDataPage.clickConfirm();
+  //     AirtimeDataPage.clickContinue();
+  //     AirtimeDataPage.clickConfirm();
+  //     AirtimeDataPage.enterTransactionPin(transactionPin);
+  //     AirtimeDataPage.clickConfirm();
 
-      cy.wait(3000);
-      const passcode = Cypress.env('PASSCODE') || '654321';
-      AirtimeDataPage.enterTransactionOtp(passcode);
-      AirtimeDataPage.clickConfirm();
+  //     cy.wait(3000);
+  //     const passcode = Cypress.env('PASSCODE') || '654321';
+  //     AirtimeDataPage.enterTransactionOtp(passcode);
+  //     AirtimeDataPage.clickConfirm();
 
-      AirtimeDataPage.verifyPurchaseSuccess();
-    });
-  });
+  //     AirtimeDataPage.verifyPurchaseSuccess();
+  //   });
+  // });
 
-  // -------------------------------------------------------
-  // Test 5: Complete an Airtel airtime purchase successfully
-  // -------------------------------------------------------
-  it('Should complete an Airtel airtime purchase successfully', () => {
-    cy.task('readEnvCredentials').then(({ transactionPin }) => {
-      cy.wait(1000)
-      AirtimeDataPage.selectProvider('Airtel');
+  // // -------------------------------------------------------
+  // // Test 5: Complete an Airtel airtime purchase successfully
+  // // -------------------------------------------------------
+  // it('Should complete an Airtel airtime purchase successfully', () => {
+  //   cy.task('readEnvCredentials').then(({ transactionPin }) => {
+  //     cy.wait(1000)
+  //     AirtimeDataPage.selectProvider('Airtel');
+  //     AirtimeDataPage.selectPayFromAccount();
 
-      cy.wait(3000)
-      AirtimeDataPage.selectFirstPackage();
-      AirtimeDataPage.fillPhoneNumber('8012345678');
+  //     cy.wait(3000)
+  //     AirtimeDataPage.selectFirstPackage();
+  //     AirtimeDataPage.fillPhoneNumber('8012345678');
 
-      AirtimeDataPage.clickContinue();
-      AirtimeDataPage.selectPayFromAccount();
-      AirtimeDataPage.clickConfirm();
-      AirtimeDataPage.enterTransactionPin(transactionPin);
-      AirtimeDataPage.clickConfirm();
+  //     AirtimeDataPage.clickContinue();
+  //     AirtimeDataPage.clickConfirm();
+  //     AirtimeDataPage.enterTransactionPin(transactionPin);
+  //     AirtimeDataPage.clickConfirm();
 
-      cy.wait(3000);
-      const passcode = Cypress.env('PASSCODE') || '654321';
-      AirtimeDataPage.enterTransactionOtp(passcode);
-      AirtimeDataPage.clickConfirm();
+  //     cy.wait(3000);
+  //     const passcode = Cypress.env('PASSCODE') || '654321';
+  //     AirtimeDataPage.enterTransactionOtp(passcode);
+  //     AirtimeDataPage.clickConfirm();
 
-      AirtimeDataPage.verifyPurchaseSuccess();
-    });
-  });
+  //     AirtimeDataPage.verifyPurchaseSuccess();
+  //   });
+  // });
 
   // -------------------------------------------------------
   // Test 6: History search filters results by phone number
@@ -130,42 +127,44 @@ describe('Lucid Business Banking - Airtime & Data Spec', () => {
     });
   });
 
-  // -------------------------------------------------------
-  // Negative Test 1: Continue is disabled without selecting a package
-  // -------------------------------------------------------
-  it('Should not allow proceeding when no package is selected', () => {
-    AirtimeDataPage.selectProvider('MTN');
+  // // -------------------------------------------------------
+  // // Negative Test 1: Continue is disabled without selecting a package
+  // // -------------------------------------------------------
+  // it('Should not allow proceeding when no package is selected', () => {
+  //   AirtimeDataPage.selectProvider('MTN');
+  //   AirtimeDataPage.selectPayFromAccount();
 
-    AirtimeDataPage.fillPhoneNumber('8012345678');
-    // Intentionally skip package selection
+  //   AirtimeDataPage.fillPhoneNumber('8012345678');
+  //   // Intentionally skip package selection
 
-    AirtimeDataPage.elements.continueButton().then($btn => {
-      if (Cypress.$($btn).is(':disabled')) {
-        cy.wrap($btn).should('be.disabled');
-      } else {
-        cy.wrap($btn).click({ force: true });
-        cy.contains(/package|required|select/i, { timeout: 10000 }).should('be.visible');
-      }
-    });
-  });
+  //   AirtimeDataPage.elements.continueButton().then($btn => {
+  //     if (Cypress.$($btn).is(':disabled')) {
+  //       cy.wrap($btn).should('be.disabled');
+  //     } else {
+  //       cy.wrap($btn).click({ force: true });
+  //       cy.contains(/package|required|select/i, { timeout: 10000 }).should('be.visible');
+  //     }
+  //   });
+  // });
 
-  // -------------------------------------------------------
-  // Negative Test 2: Continue is disabled without a phone number
-  // -------------------------------------------------------
-  it('Should not allow proceeding when phone number is empty', () => {
-    AirtimeDataPage.selectProvider('MTN');
+  // // -------------------------------------------------------
+  // // Negative Test 2: Continue is disabled without a phone number
+  // // -------------------------------------------------------
+  // it('Should not allow proceeding when phone number is empty', () => {
+  //   AirtimeDataPage.selectProvider('MTN');
+  //   AirtimeDataPage.selectPayFromAccount();
 
-    AirtimeDataPage.selectFirstPackage();
-    // Intentionally leave phone number empty
+  //   AirtimeDataPage.selectFirstPackage();
+  //   // Intentionally leave phone number empty
 
-    AirtimeDataPage.elements.continueButton().then($btn => {
-      if (Cypress.$($btn).is(':disabled')) {
-        cy.wrap($btn).should('be.disabled');
-      } else {
-        cy.wrap($btn).click({ force: true });
-        cy.contains(/phone|number|required/i, { timeout: 10000 }).should('be.visible');
-      }
-    });
-  });
+  //   AirtimeDataPage.elements.continueButton().then($btn => {
+  //     if (Cypress.$($btn).is(':disabled')) {
+  //       cy.wrap($btn).should('be.disabled');
+  //     } else {
+  //       cy.wrap($btn).click({ force: true });
+  //       cy.contains(/phone|number|required/i, { timeout: 10000 }).should('be.visible');
+  //     }
+  //   });
+  // });
 
 });

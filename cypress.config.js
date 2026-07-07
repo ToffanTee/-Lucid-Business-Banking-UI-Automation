@@ -17,6 +17,7 @@ const environments = {
 };
 
 module.exports = defineConfig({
+  projectId: 'hodbux',
   reporter: 'cypress-mochawesome-reporter',
 
   pageLoadTimeout: 100000,
