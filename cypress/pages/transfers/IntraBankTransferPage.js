@@ -138,8 +138,10 @@ class IntraBankTransferPage {
    */
   selectSourceAccount(accountNumber) {
     Logger.step(`Selecting source account: ${accountNumber}`)
+    cy.wait(1000) // allow account data to be fetched before opening the dropdown
     this.elements.payFromDropdown().click()
     cy.contains('mat-option', accountNumber).click()
+    cy.wait(1000) // allow the selection to be applied before continuing
     Logger.info(`Source account ${accountNumber} selected`)
   }
 

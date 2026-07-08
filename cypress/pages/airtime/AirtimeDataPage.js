@@ -226,10 +226,12 @@ class AirtimeDataPage {
    */
   selectPayFromAccount(index = 0) {
     Logger.step('Selecting Pay From account in modal')
+    cy.wait(1000) // allow account data to be fetched before opening the modal
     cy.contains('Select account').click({ force: true })
     this.elements.selectAccountModal().should('be.visible')
     this.elements.accountRadioOptions().eq(index).click({ force: true })
     this.elements.submitAccountButton().click({ force: true })
+    cy.wait(1000) // allow the selection to be applied before continuing
     Logger.info('Pay From account selected and submitted')
   }
 
@@ -288,19 +290,23 @@ class AirtimeDataPage {
     Logger.info('OTP entered successfully')
   }
 
-  /**
-   * Search the purchase history by phone number.
-   * @param {string} phoneNumber — phone number to search
-   */
-  searchHistory(phoneNumber) {
-    Logger.step(`Searching history for phone: ${phoneNumber}`)
-    this.elements.historySearchInput()
-      .click()
-      .clear()
-      .type(`${phoneNumber}{enter}`, { delay: 100 })
-      .blur()
-    Logger.info(`History search entered: ${phoneNumber}`)
-  }
+/**
+ * Search the purchase history by phone number.
+ * @param {string} phoneNumber — phone number to search
+ */
+searchHistory(phoneNumber) {
+  Logger.step(`Searching history for phone: ${phoneNumber}`)
+
+  this.elements.historySearchInput()
+    .click()
+    .clear()
+    .type(phoneNumber, { delay: 100 })
+
+  // Click outside the search box
+  cy.get('body').click(0, 0)
+
+  Logger.info(`History search entered: ${phoneNumber}`)
+}
 
   /**
    * Verify the purchase was submitted successfully.

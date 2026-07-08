@@ -119,7 +119,9 @@ class AccountsPage {
   navigateToAccountDetails(accountNumber) {
     Logger.step(`Navigating to account details for account: ${accountNumber}`)
     this.waitForAccountCards()
+    cy.wait(1000) // allow account data to be fetched before selecting a card
     this.elements.accountNumberText(accountNumber).should('be.visible').click()
+    cy.wait(1000) // allow account detail data to be fetched after selecting
     this.verifyAccountDetailPageLoaded(accountNumber)
     Logger.info(`Navigated to account details for ${accountNumber}`)
   }
@@ -132,8 +134,10 @@ class AccountsPage {
     Logger.step('Navigating to first available account details')
     this.waitForAccountCards()
     this.elements.availableBalanceLabel().should('be.visible')
+    cy.wait(1000) // allow account data to be fetched before selecting a card
     // Click the account number area to open details
     cy.get('.account-number, .nuban').first().click()
+    cy.wait(1000) // allow account detail data to be fetched after selecting
     this.verifyAccountDetailPageLoaded()
     Logger.info('Navigated to first account details')
   }

@@ -144,10 +144,12 @@ class CardManagementPage {
    */
   selectRequestForAccount(index = 0) {
     Logger.step('Selecting account to request card for')
+    cy.wait(1000) // allow account data to be fetched before opening the modal
     this.elements.requestForDropdown().click({ force: true })
     this.elements.selectAccountModal().should('be.visible')
     this.elements.accountRadioOptions().eq(index).click({ force: true })
     this.elements.submitAccountButton().click({ force: true })
+    cy.wait(1000) // allow the selection to be applied before continuing
     Logger.info('Account selected for card request')
   }
 
