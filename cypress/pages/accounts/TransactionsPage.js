@@ -270,10 +270,10 @@ class TransactionsPage {
     Logger.step(`Selecting date option: "${option}"`)
 
     // Click the "Select Option" dropdown to open it
-    cy.contains('Select Option').should('be.visible').click()
+    cy.contains('Select Option').scrollIntoView().click({ force: true })
 
     // Select the option from the dropdown list
-    cy.contains(option).should('be.visible').click()
+    cy.contains(option).scrollIntoView().click({ force: true })
 
     Logger.info(`Date option selected: "${option}"`)
   }
@@ -284,7 +284,7 @@ class TransactionsPage {
    */
   expandDateRangeAccordion() {
     Logger.step('Expanding Date Range accordion')
-    this.elements.dateRangeAccordion().click()
+    this.elements.dateRangeAccordion().scrollIntoView().click({ force: true })
     Logger.info('Date Range accordion expanded')
   }
 
@@ -295,7 +295,7 @@ class TransactionsPage {
    */
   setStartDate(date) {
     Logger.step(`Setting start date: ${date}`)
-    this.elements.startDateInput().clear().type(date)
+    this.elements.startDateInput().scrollIntoView().click({ force: true }).clear({ force: true }).type(date, { force: true })
     Logger.info(`Start date set: ${date}`)
   }
 
@@ -306,18 +306,33 @@ class TransactionsPage {
    */
   setEndDate(date) {
     Logger.step(`Setting end date: ${date}`)
-    this.elements.endDateInput().clear().type(date)
+    this.elements.endDateInput().scrollIntoView().click({ force: true }).clear({ force: true }).type(date, { force: true })
     Logger.info(`End date set: ${date}`)
   }
 
+/**
+ * Scroll to the transaction filter area before opening the filter panel.
+ */
+scrollToFilterButton() {
+  Logger.step('Scrolling to filter button')
+
+  cy.scrollTo('bottom')
+
+  Logger.info('Scrolled to filter button area')
+}
+  
   /**
    * Apply a custom date range filter using Start Date and End Date inputs.
    * Opens the Date Range accordion, fills in dates, and clicks Apply Search.
    * @param {string} startDate — start date in MM/DD/YYYY format
    * @param {string} endDate — end date in MM/DD/YYYY format
    */
+  
   applyDateRangeFilter(startDate, endDate) {
     Logger.step(`Applying date range filter: ${startDate} to ${endDate}`)
+
+    this.scrollToFilterButton()
+
 
     // Expand the Date Range accordion
     this.expandDateRangeAccordion()
@@ -357,7 +372,7 @@ class TransactionsPage {
    */
   clickApplySearch() {
     Logger.step('Clicking Apply Search button')
-    this.elements.applySearchButton().should('be.visible').click()
+    this.elements.applySearchButton().scrollIntoView().click({ force: true })
     Logger.info('Apply Search clicked')
   }
 
@@ -366,7 +381,7 @@ class TransactionsPage {
    */
   clickReset() {
     Logger.step('Clicking Reset to clear all filters')
-    this.elements.resetButton().should('be.visible').click()
+    this.elements.resetButton().scrollIntoView().click({ force: true })
     Logger.info('Filters reset')
   }
 

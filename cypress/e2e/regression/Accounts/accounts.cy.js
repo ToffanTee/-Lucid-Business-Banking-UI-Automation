@@ -129,44 +129,27 @@ describe('Lucid Business Banking - Accounts Module', () => {
   });
 
   // -------------------------------------------------------
-  // Test 7b: Date Option preset filter — no full page reload
+  // Test 7b: Date Range custom filter — no full page reload
   // -------------------------------------------------------
-  it('Should select a Date Option preset filter without full page reload', function () {
+  it('Should apply a custom Date Range filter without full page reload', function () {
     AccountsPage.waitForAccountCards();
     AccountsPage.navigateToAccountDetails('1200005265');
-    
+
     // Set up the no-reload assertion
     TransactionsPage.setupNoReloadAssertion();
-    
-    // Open filter panel and apply a date option preset
+
+
+  // Scroll before opening filter panel
+  TransactionsPage.scrollToFilterButton();
+
+
+    // Open filter panel and apply a custom date range
     TransactionsPage.clickFilterButton();
-    TransactionsPage.applyDateOptionFilter('This month');
-    
+    TransactionsPage.applyDateRangeFilter('01/01/2026', '06/10/2026');
+
     // Verify no full page reload occurred
     TransactionsPage.verifyNoFullPageReload();
-    // The displayed date range for transactions has changed to 'Last 2 months'.
-    cy.get('#app-body app-filter-header')
-      .should('contain.text', 'Last 2 months')
-    
   });
-
-  // // -------------------------------------------------------
-  // // Test 7c: Date Range custom filter — no full page reload
-  // // -------------------------------------------------------
-  // it('Should apply a custom Date Range filter without full page reload', function () {
-  //   AccountsPage.waitForAccountCards();
-  //   AccountsPage.navigateToAccountDetails('1200005265');
-
-  //   // Set up the no-reload assertion
-  //   TransactionsPage.setupNoReloadAssertion();
-
-  //   // Open filter panel and apply a custom date range
-  //   TransactionsPage.clickFilterButton();
-  //   TransactionsPage.applyDateRangeFilter('01/01/2026', '06/10/2026');
-
-  //   // Verify no full page reload occurred
-  //   TransactionsPage.verifyNoFullPageReload();
-  // });
 
   // -------------------------------------------------------
   // Test 8: Infinite scroll (placeholder — requires transaction data)

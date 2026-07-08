@@ -70,6 +70,18 @@ class CreateProfilePage {
         .clear()
         .type(confirmPassword, { delay: 50, parseSpecialCharSequences: false })
         .blur()
+
+      // The "passwords match" validator on this form only re-runs when the
+      // Password field itself changes, not when Confirm Password changes —
+      // so it can be left showing a stale "Password do not match" error even
+      // though both fields now hold identical values. Nudge the Password
+      // field (net-zero edit: type a char, then remove it) to force that
+      // validator to re-fire against the final Confirm Password value.
+      if (password) {
+        this.elements.passwordInput().type(' {backspace}', { delay: 50 }).blur()
+        cy.contains('Password do not match').should('not.exist')
+      }
+
       Logger.info('Confirm password entered successfully')
     } else {
       Logger.error('Confirm password is empty — cannot enter')
@@ -78,7 +90,7 @@ class CreateProfilePage {
 
   clickContinue() {
     Logger.step('Clicking Continue button')
-    this.elements.createAccountButton().should('be.visible').click()
+    this.elements.createAccountButton().should('be.visible').and('not.be.disabled').click()
     Logger.info('Continue button clicked successfully')
   }
 

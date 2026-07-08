@@ -301,9 +301,7 @@ searchHistory(phoneNumber) {
     .click()
     .clear()
     .type(phoneNumber, { delay: 100 })
-
-  // Click outside the search box
-  cy.get('body').click(0, 0)
+    .blur()
 
   Logger.info(`History search entered: ${phoneNumber}`)
 }
