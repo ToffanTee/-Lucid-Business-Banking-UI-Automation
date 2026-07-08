@@ -2,6 +2,7 @@ import LoginPage from '../../../pages/login/LoginPage';
 import DeviceRegistrationPage from '../../../pages/login/DeviceRegistrationPage';
 import TransfersPage from '../../../pages/transfers/TransfersPage';
 import IntraBankTransferPage from '../../../pages/transfers/IntraBankTransferPage';
+import { generateFutureDate } from '../../../utils/dataBuilder';
 
 describe('Lucid Business Banking - Intra-bank Transfers Spec', () => {
 
@@ -94,7 +95,7 @@ describe('Lucid Business Banking - Intra-bank Transfers Spec', () => {
       IntraBankTransferPage.selectSpendingCategory('TRANSPORT');
       IntraBankTransferPage.fillDescription('Automated later scheduled intra-bank test');
       IntraBankTransferPage.selectScheduleOption('Later');
-      IntraBankTransferPage.fillStartDate('07/31/2026');
+      IntraBankTransferPage.fillStartDate(generateFutureDate(7));
 
       IntraBankTransferPage.clickContinue();
       IntraBankTransferPage.clickConfirmTransfer();
@@ -123,8 +124,8 @@ describe('Lucid Business Banking - Intra-bank Transfers Spec', () => {
       IntraBankTransferPage.selectSpendingCategory('TRANSPORT');
       IntraBankTransferPage.fillDescription('Automated repeating intra-bank test');
       IntraBankTransferPage.selectScheduleOption('Repeating');
-      IntraBankTransferPage.fillStartDate('07/01/2026');
-      IntraBankTransferPage.fillEndDate('12/31/2026');
+      IntraBankTransferPage.fillStartDate(generateFutureDate(1));
+      IntraBankTransferPage.fillEndDate(generateFutureDate(180));
       IntraBankTransferPage.selectFrequency('Monthly');
 
       IntraBankTransferPage.clickContinue();
@@ -151,8 +152,8 @@ describe('Lucid Business Banking - Intra-bank Transfers Spec', () => {
   //   IntraBankTransferPage.fillDestinationAccount('1100006568');
   //   IntraBankTransferPage.fillAmount('50');
   //   IntraBankTransferPage.selectScheduleOption('Repeating');
-  //   IntraBankTransferPage.fillStartDate('07/01/2026');
-  //   IntraBankTransferPage.fillEndDate('12/31/2026');
+  //   IntraBankTransferPage.fillStartDate(generateFutureDate(1));
+  //   IntraBankTransferPage.fillEndDate(generateFutureDate(180));
   //   // Intentionally skip frequency selection
 
   //   IntraBankTransferPage.elements.continueButton().then($btn => {

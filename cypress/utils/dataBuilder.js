@@ -34,6 +34,21 @@ export const generateRandomName = () => {
 };
 
 /**
+ * Generates a date N days from today, formatted as MM/DD/YYYY.
+ * Used for scheduled/repeating transfer dates so tests never hardcode a
+ * date that will eventually fall in the past and get rejected as invalid.
+ * @param {number} daysFromNow — how many days ahead of today (defaults to 1, i.e. tomorrow)
+ */
+export const generateFutureDate = (daysFromNow = 1) => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  return `${mm}/${dd}/${yyyy}`;
+};
+
+/**
  * Generate test data for signatory/director registration.
  * Customize the fields below to match Lucid Business Banking forms.
  */

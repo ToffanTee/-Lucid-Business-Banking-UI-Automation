@@ -3,6 +3,7 @@ import DeviceRegistrationPage from '../../../pages/login/DeviceRegistrationPage'
 import TransfersPage from '../../../pages/transfers/TransfersPage';
 import InterBankTransferPage from '../../../pages/transfers/InterBankTransferPage';
 import IntraBankTransferPage from '../../../pages/transfers/IntraBankTransferPage';
+import { generateFutureDate } from '../../../utils/dataBuilder';
 
 describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
 
@@ -110,7 +111,7 @@ describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
       InterBankTransferPage.selectSpendingCategory('TRANSPORT');
       InterBankTransferPage.fillDescription('Automated later scheduled inter-bank test');
       InterBankTransferPage.selectScheduleOption('Later');
-      InterBankTransferPage.fillStartDate('07/31/2026');
+      InterBankTransferPage.fillStartDate(generateFutureDate(7));
 
       InterBankTransferPage.clickContinue();
       InterBankTransferPage.clickConfirmTransfer();
@@ -141,8 +142,8 @@ describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
       InterBankTransferPage.selectSpendingCategory('TRANSPORT');
       InterBankTransferPage.fillDescription('Automated repeating inter-bank test');
       InterBankTransferPage.selectScheduleOption('Repeating');
-      InterBankTransferPage.fillStartDate('07/01/2026');
-      InterBankTransferPage.fillEndDate('12/31/2026');
+      InterBankTransferPage.fillStartDate(generateFutureDate(1));
+      InterBankTransferPage.fillEndDate(generateFutureDate(180));
       InterBankTransferPage.selectFrequency('Monthly');
 
       InterBankTransferPage.clickContinue();
@@ -171,8 +172,8 @@ describe('Lucid Business Banking - Inter-bank Transfers Spec', () => {
   //   InterBankTransferPage.selectDestinationBank('Sterling');
   //   InterBankTransferPage.fillAmount('50');
   //   InterBankTransferPage.selectScheduleOption('Repeating');
-  //   InterBankTransferPage.fillStartDate('07/01/2026');
-  //   InterBankTransferPage.fillEndDate('12/31/2026');
+  //   InterBankTransferPage.fillStartDate(generateFutureDate(1));
+  //   InterBankTransferPage.fillEndDate(generateFutureDate(180));
   //   // Intentionally skip frequency selection
 
   //   InterBankTransferPage.elements.continueButton().then($btn => {
