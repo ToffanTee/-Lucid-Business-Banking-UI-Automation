@@ -48,6 +48,15 @@ module.exports = defineConfig({
           launchOptions.args.push('--disable-dev-shm-usage');
           launchOptions.args.push('--disable-extensions');
           launchOptions.args.push('--no-sandbox');
+
+          // Headless Chrome always treats its single tab as backgrounded/occluded,
+          // which throttles JS timers and requestAnimationFrame. If the app's own
+          // init/hydration sequence relies on those to complete, that throttling
+          // can stall cy.visit() indefinitely in headless mode even though the
+          // same page loads fine headed (where the tab is genuinely visible).
+          launchOptions.args.push('--disable-background-timer-throttling');
+          launchOptions.args.push('--disable-backgrounding-occluded-windows');
+          launchOptions.args.push('--disable-renderer-backgrounding');
         }
         return launchOptions;
       });
